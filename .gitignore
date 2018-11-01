@@ -2,4 +2,6 @@
 build.xml
 build/
 nbproject/
+out/
+.idea/
 manifest.mf

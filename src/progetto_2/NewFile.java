@@ -1,11 +1,6 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintStream;
+package progetto_2;
+
+import java.io.*;
 import java.security.*;
 import javax.crypto.*;
 
@@ -27,7 +22,7 @@ public class NewFile {
 	private byte[] messaggio;
 	
 	public NewFile(String mittente, String destinatario, byte cifrario_m, byte cifrario_k, byte padding, byte integrita,
-			byte[] salt, byte modi_operativi, byte[] iv, byte hash, byte mac, byte firma, byte[] messaggio) {
+			byte[] salt, byte modi_operativi, byte[] iv, byte hash, byte mac, byte firma,byte dimensione_firma, byte[] messaggio) {
 		super();
 		this.mittente = mittente;
 		this.destinatario = destinatario;
@@ -41,6 +36,7 @@ public class NewFile {
 		this.hash = hash;
 		this.mac = mac;
 		this.firma = firma;
+		this.dimensione_firma = dimensione_firma;
 		this.messaggio = messaggio;
 	}
 	public void creazione() {
@@ -66,12 +62,60 @@ public class NewFile {
 		      System.out.println("Errore: " + e);
 		      System.exit(1);
 		    }
-		  } 
-	
+		  }
+
+	// chiamato dalla soluzione 2
+	private static void doCopy(InputStream is, OutputStream os)
+			throws IOException {
+		try {
+			byte[] bytes = new byte[4096];
+			int numBytes;
+			while ((numBytes = is.read(bytes)) != -1) {
+				os.write(bytes, 0, numBytes);
+			}
+		} finally {
+			is.close();
+			os.close();
+		}
+	}
+
+
+
 	//aggiungere key publickey nel metodo
-	public boolean codifica(Key publickey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+	public boolean codifica(Key publickey, File file) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		  try {
-		      FileOutputStream file = new FileOutputStream("file2.txt");
+
+		  	//Soluzione 1
+		  	  int BUFFER = 8;
+			  FileInputStream fis = new FileInputStream(file);
+			  byte[] buffer = new byte[BUFFER]; //array contentente i byte letti a ogni iterazione
+			  int read = 0; //ignorare
+			  while ((read = fis.read(buffer)) > 0) {
+			  	  //effettua update
+				  String s = "";
+				  for (byte b : buffer) {
+					  s = s + (char) b;
+				  }
+				  System.out.println(s);
+			  }
+			  //qui dovrebbe esserci il dofinal??
+			  fis.close();
+				//-----------------------
+
+
+			  //Soluzione 2
+			  FileOutputStream os = new FileOutputStream("file2.txt");
+			  KeyGenerator keyGenerator = KeyGenerator.getInstance(Match.cifrario_m.get(this.cifrario_m));
+			  SecretKey secretKey = keyGenerator.generateKey();
+			  Cipher cipher2 = Cipher.getInstance(Match.cifrario_m.get(this.cifrario_m)+"/"+Match.modi_operativi.get(this.modo_operativo)+"/PKCS5Padding");
+			  cipher2.init(Cipher.ENCRYPT_MODE, secretKey);
+			  CipherInputStream cis = new CipherInputStream(fis, cipher2);
+			  doCopy(cis, os);
+			  //----------------
+
+
+
+		      //FileOutputStream file = new FileOutputStream("file2.txt");
 		      PrintStream Output = new PrintStream(file);
 		      Output.print(mittente+"_");
 		      Output.print(destinatario+"_");
@@ -87,8 +131,8 @@ public class NewFile {
 		      Output.print(firma+"_");
 		      Output.println(dimensione_firma+"_");      
 		//messaggio
-		KeyGenerator keyGenerator = KeyGenerator.getInstance(Match.cifrario_m.get(this.cifrario_m));   
-		SecretKey secretKey = keyGenerator.generateKey();
+		 keyGenerator = KeyGenerator.getInstance(Match.cifrario_m.get(this.cifrario_m));
+		 secretKey = keyGenerator.generateKey();
 		Cipher cipher = Cipher.getInstance(Match.cifrario_m.get(this.cifrario_m)+"/"+Match.modi_operativi.get(this.modo_operativo)+"/PKCS5Padding");
 		//Cipher cipherkey = Cipher.getInstance("RSA/"+Match.modi_operativi.get(this.modo_operativo)+"/"+Match.padding.get(this.padding));
 		cipher.init(Cipher.ENCRYPT_MODE, secretKey);

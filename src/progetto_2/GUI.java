@@ -1,49 +1,80 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package progetto_2;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.security.NoSuchAlgorithmException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.security.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.crypto.NoSuchPaddingException;
 
-/**
- *
- * @author vimat
- */
-public class GUI extends javax.swing.JFrame {
+public class GUI {
+    final int BUFFER = 8;
+    private JTabbedPane tabbedPane1;
+    private ButtonGroup buttonGroup1;
+    private JComboBox codificaMSelect;
+    private JComboBox hashSelect;
+    private JComboBox macSelect;
+    private JComboBox DSASelect;
+    private JComboBox modiSelect;
+    private JComboBox paddingRSASelect;
+    private JComboBox dimRSASelect;
+    private JRadioButton firmaRadio;
+    private JTextField mittenteText;
+    private JTextField destinatarioText;
+    private JButton fileButton;
+    private JButton codificaButton;
+    private JComboBox dimDSASelect;
+    private JRadioButton MACRadio;
+    private JRadioButton HashRadio;
+    private JPanel panelMain;
 
-    private void enableFirma(){
-        DSASelect.setEnabled(true);
-        dimDSASelect.setEnabled(true);
-        hashSelect.setEnabled(false);
-        macSelect.setEnabled(false);
-    }
-    private void enableMac(){
-        DSASelect.setEnabled(false);
-        dimDSASelect.setEnabled(false);
-        hashSelect.setEnabled(false);
-        macSelect.setEnabled(true);
-    }
-    private void enableHash(){
-        DSASelect.setEnabled(false);
-        dimDSASelect.setEnabled(false);
-        hashSelect.setEnabled(true);
-        macSelect.setEnabled(false);
-    }
-    
-    /**
-     * Creates new form GUI
-     */
+    private File codificaFile = null;
+
     public GUI() {
-        initComponents();
-        
-   
+
+
+        buttonGroup1 = new ButtonGroup();
+        buttonGroup1.add(firmaRadio);
+        firmaRadio.setSelected(true);
+        buttonGroup1.add(MACRadio);
+        buttonGroup1.add(HashRadio);
+
+
+        codificaMSelect.setMaximumRowCount(3);
+        codificaMSelect.setModel(new DefaultComboBoxModel<>(new String[]{"AES", "DES", "DESede"}));
+
+        modiSelect.setMaximumRowCount(3);
+        modiSelect.setModel(new DefaultComboBoxModel<>(new String[]{"ECB", "CBC", "CFB"}));
+
+        dimRSASelect.setMaximumRowCount(2);
+        dimRSASelect.setModel(new DefaultComboBoxModel<>(new String[]{"1024", "2048"}));
+
+        paddingRSASelect.setMaximumRowCount(2);
+        paddingRSASelect.setModel(new DefaultComboBoxModel<>(new String[]{"PKCS1", "OAEP"}));
+
+        hashSelect.setMaximumRowCount(5);
+        hashSelect.setModel(new DefaultComboBoxModel<>(new String[]{"SHA-1", "SHA-224", "SHA-256", "SHA-384", "SHA-512"}));
+        hashSelect.setEnabled(false);
+
+        macSelect.setMaximumRowCount(3);
+        macSelect.setModel(new DefaultComboBoxModel<>(new String[]{"MD5", "SHA-256", "SHA-384"}));
+        macSelect.setEnabled(false);
+
+        dimDSASelect.setMaximumRowCount(2);
+        dimDSASelect.setModel(new DefaultComboBoxModel<>(new String[]{"1024", "2048"}));
+
+        DSASelect.setMaximumRowCount(3);
+        DSASelect.setModel(new DefaultComboBoxModel<>(new String[]{"SHA1withDSA", "SHA224withDSA", "SHA256withDSA"}));
+
+
         firmaRadio.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -65,382 +96,333 @@ public class GUI extends javax.swing.JFrame {
 
             }
         });
+        codificaButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                codificaActionPerformed(e);
+            }
+        });
+        fileButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser fc = new JFileChooser();
 
+
+                int returnValue = fc.showOpenDialog(null);
+                // int returnValue = jfc.showSaveDialog(null);
+
+                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                    codificaFile = fc.getSelectedFile();
+                    System.out.println(codificaFile.getAbsolutePath());
+                }
+            }
+        });
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
-
-        buttonGroup1 = new javax.swing.ButtonGroup();
-        jTabbedPane1 = new javax.swing.JTabbedPane();
-        jPanel2 = new javax.swing.JPanel();
-        codificaMSelect = new javax.swing.JComboBox<>();
-        modiSelect = new javax.swing.JComboBox<>();
-        dimRSASelect = new javax.swing.JComboBox<>();
-        paddingRSASelect = new javax.swing.JComboBox<>();
-        hashSelect = new javax.swing.JComboBox<>();
-        macSelect = new javax.swing.JComboBox<>();
-        dimDSASelect = new javax.swing.JComboBox<>();
-        DSASelect = new javax.swing.JComboBox<>();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        jLabel5 = new javax.swing.JLabel();
-        jLabel6 = new javax.swing.JLabel();
-        jLabel7 = new javax.swing.JLabel();
-        jLabel8 = new javax.swing.JLabel();
-        codifica = new javax.swing.JButton();
-        firmaRadio = new javax.swing.JRadioButton();
-        MACRadio = new javax.swing.JRadioButton();
-        HashRadio = new javax.swing.JRadioButton();
-        destinatarioText = new javax.swing.JTextField();
-        mittenteText = new javax.swing.JTextField();
-        jPanel3 = new javax.swing.JPanel();
-        jButton1 = new javax.swing.JButton();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
-        codificaMSelect.setMaximumRowCount(3);
-        codificaMSelect.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "AES", "DES", "DESede" }));
-        codificaMSelect.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                codificaMSelectActionPerformed(evt);
-            }
-        });
-
-        modiSelect.setMaximumRowCount(3);
-        modiSelect.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ECB", "CBC", "CFB" }));
-        modiSelect.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                modiSelectActionPerformed(evt);
-            }
-        });
-
-        dimRSASelect.setMaximumRowCount(2);
-        dimRSASelect.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "1024", "2048" }));
-
-        paddingRSASelect.setMaximumRowCount(2);
-        paddingRSASelect.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "PKCS1", "OAEP" }));
-
-        hashSelect.setMaximumRowCount(5);
-        hashSelect.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "SHA-1", "SHA-224", "SHA-256", "SHA-384", "SHA-512" }));
+    private void enableFirma() {
+        DSASelect.setEnabled(true);
+        dimDSASelect.setEnabled(true);
         hashSelect.setEnabled(false);
-
-        macSelect.setMaximumRowCount(3);
-        macSelect.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "MD5", "SHA-256", "SHA-384" }));
         macSelect.setEnabled(false);
+    }
 
-        dimDSASelect.setMaximumRowCount(2);
-        dimDSASelect.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "1024", "2048" }));
+    private void enableMac() {
+        DSASelect.setEnabled(false);
+        dimDSASelect.setEnabled(false);
+        hashSelect.setEnabled(false);
+        macSelect.setEnabled(true);
+    }
 
-        DSASelect.setMaximumRowCount(3);
-        DSASelect.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "SHA1withDSA", "SHA224withDSA", "SHA256withDSA" }));
+    private void enableHash() {
+        DSASelect.setEnabled(false);
+        dimDSASelect.setEnabled(false);
+        hashSelect.setEnabled(true);
+        macSelect.setEnabled(false);
+    }
 
-        jLabel1.setText("Codifica messaggio");
-
-        jLabel2.setText("Modo operativo");
-
-        jLabel3.setText("Dimensione RSA");
-
-        jLabel4.setText("Padding RSA");
-
-        jLabel5.setText("Hash");
-
-        jLabel6.setText("MAC");
-
-        jLabel7.setText("Firma ");
-
-        jLabel8.setText("Dimensione firma");
-
-        codifica.setText("Codifica");
-        codifica.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                codificaActionPerformed(evt);
-            }
-        });
-
-        buttonGroup1.add(firmaRadio);
-        firmaRadio.setSelected(true);
-        firmaRadio.setText("Firma digitale");
-        firmaRadio.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                firmaRadioActionPerformed(evt);
-            }
-        });
-
-        buttonGroup1.add(MACRadio);
-        MACRadio.setText("MAC");
-
-        buttonGroup1.add(HashRadio);
-        HashRadio.setText("Hash");
-
-        destinatarioText.setText("Destinatario");
-
-        mittenteText.setText("Mittente");
-        mittenteText.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mittenteTextActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(codificaMSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(modiSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel2)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(firmaRadio)
-                            .addComponent(MACRadio))))
-                .addGap(24, 24, 24)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(dimRSASelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jLabel3))
-                                .addGap(40, 40, 40)
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(hashSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jLabel5))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(macSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jLabel6)))
-                            .addComponent(paddingRSASelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel4))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel7)
-                            .addComponent(DSASelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel8)
-                            .addComponent(dimDSASelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 40, Short.MAX_VALUE)
-                        .addComponent(codifica))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(destinatarioText, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(mittenteText, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(HashRadio)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel3)
-                            .addComponent(jLabel5)
-                            .addComponent(jLabel6)
-                            .addComponent(jLabel7))
-                        .addGap(3, 3, 3)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(codificaMSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(dimRSASelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(hashSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(macSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(DSASelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addComponent(codifica))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
-                    .addComponent(jLabel4)
-                    .addComponent(jLabel8))
-                .addGap(5, 5, 5)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(modiSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(paddingRSASelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(dimDSASelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(26, 26, 26)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(firmaRadio)
-                    .addComponent(destinatarioText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(MACRadio)
-                    .addComponent(mittenteText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(HashRadio)
-                .addContainerGap(49, Short.MAX_VALUE))
-        );
-
-        jTabbedPane1.addTab("Codifica", jPanel2);
-
-        jButton1.setText("jButton1");
-
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(179, 179, 179)
-                .addComponent(jButton1)
-                .addContainerGap(366, Short.MAX_VALUE))
-        );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(78, 78, 78)
-                .addComponent(jButton1)
-                .addContainerGap(161, Short.MAX_VALUE))
-        );
-
-        jTabbedPane1.addTab("Decodifica", jPanel3);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jTabbedPane1))
-        );
-
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
-
-    private void codificaMSelectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_codificaMSelectActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_codificaMSelectActionPerformed
-
-    private void modiSelectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_modiSelectActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_modiSelectActionPerformed
-
-    private void codificaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_codificaActionPerformed
-        // TODO add your handling code here:
+    private void codificaActionPerformed(ActionEvent evt) {
+        if (codificaFile == null) {
+            return;
+        }
         String mittente = mittenteText.getText();
         String destinatario = destinatarioText.getText();
-        byte cifrario_m = (byte)codificaMSelect.getSelectedIndex();
-        byte cifrario_k_dim = (byte)dimRSASelect.getSelectedIndex();
-        byte padding = (byte)paddingRSASelect.getSelectedIndex();
+        byte cifrario_m = (byte) codificaMSelect.getSelectedIndex();
+        byte cifrario_k_dim = (byte) dimRSASelect.getSelectedIndex();
+        byte padding = (byte) paddingRSASelect.getSelectedIndex();
         byte integrita;
-        byte hash=0x08;
-        byte mac=0x08;
-        byte firma=0x08;
-        byte dimFirma=0x08;
-        if(firmaRadio.isSelected()){
+        byte hash = 0x08;
+        byte mac = 0x08;
+        byte firma = 0x08;
+        byte dimFirma = 0x08;
+        if (firmaRadio.isSelected()) {
             integrita = 0x00;
-            hash=(byte)DSASelect.getSelectedIndex();
-            hash=(byte)dimDSASelect.getSelectedIndex();
-            
-        } else if(MACRadio.isSelected()){
-            integrita  = 0x01;
-            hash=(byte)macSelect.getSelectedIndex();
+            hash = (byte) DSASelect.getSelectedIndex();
+            hash = (byte) dimDSASelect.getSelectedIndex();
+
+        } else if (MACRadio.isSelected()) {
+            integrita = 0x01;
+            hash = (byte) macSelect.getSelectedIndex();
         } else {
             integrita = 0x02;
-            hash=(byte)hashSelect.getSelectedIndex();
+            hash = (byte) hashSelect.getSelectedIndex();
         }
-        byte modi_operativi = (byte)modiSelect.getSelectedIndex();
-        
-        
+        byte modi_operativi = (byte) modiSelect.getSelectedIndex();
+
+
         System.out.println(mittente + " " + destinatario + " " + cifrario_m);
-        NewFile f = new NewFile(mittente, destinatario, cifrario_m, 
+        NewFile f = new NewFile(mittente, destinatario, cifrario_m,
                 cifrario_k_dim, padding, integrita, null, modi_operativi, null, hash, mac, firma, dimFirma, null);
         try {
-            f.codifica();
+            KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
+            gen.initialize(1024);
+            KeyPair k = gen.generateKeyPair();
+            Key publickey = k.getPublic();
+
+
+
+            f.codifica(publickey, codificaFile);
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         } catch (NoSuchPaddingException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
         }
-    }//GEN-LAST:event_codificaActionPerformed
+    }
 
-    private void firmaRadioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_firmaRadioActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_firmaRadioActionPerformed
 
-    private void mittenteTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mittenteTextActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_mittenteTextActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(GUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(GUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(GUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(GUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (UnsupportedLookAndFeelException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
+        EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new GUI().setVisible(true);
+                JFrame app = new JFrame("App");
+                app.setContentPane(new GUI().panelMain);
+                app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                app.pack();
+                app.setVisible(true);
             }
         });
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JComboBox<String> DSASelect;
-    private javax.swing.JRadioButton HashRadio;
-    private javax.swing.JRadioButton MACRadio;
-    private javax.swing.ButtonGroup buttonGroup1;
-    private javax.swing.JButton codifica;
-    private javax.swing.JComboBox<String> codificaMSelect;
-    private javax.swing.JTextField destinatarioText;
-    private javax.swing.JComboBox<String> dimDSASelect;
-    private javax.swing.JComboBox<String> dimRSASelect;
-    private javax.swing.JRadioButton firmaRadio;
-    private javax.swing.JComboBox<String> hashSelect;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel8;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JTabbedPane jTabbedPane1;
-    private javax.swing.JComboBox<String> macSelect;
-    private javax.swing.JTextField mittenteText;
-    private javax.swing.JComboBox<String> modiSelect;
-    private javax.swing.JComboBox<String> paddingRSASelect;
-    // End of variables declaration//GEN-END:variables
+    {
+// GUI initializer generated by IntelliJ IDEA GUI Designer
+// >>> IMPORTANT!! <<<
+// DO NOT EDIT OR ADD ANY CODE HERE!
+        $$$setupUI$$$();
+    }
+
+    /**
+     * Method generated by IntelliJ IDEA GUI Designer
+     * >>> IMPORTANT!! <<<
+     * DO NOT edit this method OR call it in your code!
+     *
+     * @noinspection ALL
+     */
+    private void $$$setupUI$$$() {
+        panelMain = new JPanel();
+        panelMain.setLayout(new CardLayout(0, 0));
+        tabbedPane1 = new JTabbedPane();
+        panelMain.add(tabbedPane1, "Card1");
+        final JPanel panel1 = new JPanel();
+        panel1.setLayout(new GridBagLayout());
+        tabbedPane1.addTab("Untitled", panel1);
+        final JLabel label1 = new JLabel();
+        label1.setText("Codifica Messaggio");
+        GridBagConstraints gbc;
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        panel1.add(label1, gbc);
+        codificaMSelect = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(codificaMSelect, gbc);
+        final JLabel label2 = new JLabel();
+        label2.setText("Dimensione RSA");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel1.add(label2, gbc);
+        dimRSASelect = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(dimRSASelect, gbc);
+        final JLabel label3 = new JLabel();
+        label3.setText("Hash");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel1.add(label3, gbc);
+        hashSelect = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(hashSelect, gbc);
+        final JLabel label4 = new JLabel();
+        label4.setText("MAC");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 3;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel1.add(label4, gbc);
+        final JLabel label5 = new JLabel();
+        label5.setText("Firma");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 4;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel1.add(label5, gbc);
+        macSelect = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 3;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(macSelect, gbc);
+        DSASelect = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 4;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(DSASelect, gbc);
+        final JLabel label6 = new JLabel();
+        label6.setText("Modo Operativo");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel1.add(label6, gbc);
+        final JLabel label7 = new JLabel();
+        label7.setText("Padding RSA");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel1.add(label7, gbc);
+        final JLabel label8 = new JLabel();
+        label8.setText("Dimensione Firma");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 4;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel1.add(label8, gbc);
+        modiSelect = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(modiSelect, gbc);
+        paddingRSASelect = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(paddingRSASelect, gbc);
+        dimDSASelect = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 4;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(dimDSASelect, gbc);
+        firmaRadio = new JRadioButton();
+        firmaRadio.setText("Firma Digitale");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel1.add(firmaRadio, gbc);
+        MACRadio = new JRadioButton();
+        MACRadio.setText("MAC");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel1.add(MACRadio, gbc);
+        HashRadio = new JRadioButton();
+        HashRadio.setText("Hash");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel1.add(HashRadio, gbc);
+        mittenteText = new JTextField();
+        mittenteText.setText("Mittente");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(mittenteText, gbc);
+        destinatarioText = new JTextField();
+        destinatarioText.setText("Destinatario");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 5;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(destinatarioText, gbc);
+        fileButton = new JButton();
+        fileButton.setText("File");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 5;
+        gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(fileButton, gbc);
+        codificaButton = new JButton();
+        codificaButton.setText("Codifica");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 5;
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(codificaButton, gbc);
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    public JComponent $$$getRootComponent$$$() {
+        return panelMain;
+    }
 }
