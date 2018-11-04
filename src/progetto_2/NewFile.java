@@ -6,8 +6,11 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 
@@ -105,7 +108,7 @@ public class NewFile {
 
 
     //aggiungere key publickey nel metodo
-    public boolean codifica(File keyFile, File file, File destinazione) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException {
+    public boolean codifica(File keyFile, File file, File destinazione) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException, InvalidAlgorithmParameterException {
         try {
             //chiave per il cifrario messaggio
             KeyGenerator keyGenerator = KeyGenerator.getInstance(Match.cifrario_m.get(this.cifrario_m));
@@ -168,15 +171,14 @@ public class NewFile {
             Cipher cipher = Cipher.getInstance(Match.cifrario_m.get(this.cifrario_m) + "/" + Match.modi_operativi.get(this.modo_operativo) + "/PKCS5Padding");
 
             //iv e salt
-            iv = cipher.getIV();
             SecureRandom random = new SecureRandom();
             salt = new byte[8];
             random.nextBytes(salt);
             byte sl = (byte)'.';
             ArrayList<Byte> bytes = new ArrayList<Byte>();
-            bytes.addAll(Utils.toByteArrayNonprimitive(mittente.getBytes()));
+            bytes.addAll(Utils.toByteArrayNonprimitive(mittente.getBytes("UTF-8")));
             bytes.add(sl);
-            bytes.addAll(Utils.toByteArrayNonprimitive(destinatario.getBytes()));
+            bytes.addAll(Utils.toByteArrayNonprimitive(destinatario.getBytes("UTF-8")));
             bytes.add(sl);
             bytes.add(cifrario_m);
             bytes.add(sl);
@@ -197,20 +199,25 @@ public class NewFile {
             bytes.add(dimensione_firma);
             bytes.add(sl);
             bytes.addAll(Utils.toByteArrayNonprimitive(salt));
-            if(iv!=null) {
-                bytes.addAll(Utils.toByteArrayNonprimitive(iv));
-            } else {
-                int n = this.modo_operativo==(byte)0x00?16:8;
-                for(int i = 0;i<n;i++) {
-                    bytes.add((byte) 0x00);
-                }
-            }
+            int n = this.cifrario_m==(byte)0x00?16:8;
+            iv = new byte[n];
 
+            if(modo_operativo!=(byte)0x00) {
+                random.nextBytes(iv);
+
+            } else {
+                Arrays.fill(iv, (byte)0x00);
+            }
+            bytes.addAll(Utils.toByteArrayNonprimitive(iv));
+            // MODO OPERATIVO DA ERRORE; CON HASH FUNZIONA
+            //BASE O NO é UGUALE
+            //os.write(Base64.getEncoder().encode(Utils.toByteArray(bytes)));
             os.write(Utils.toByteArray(bytes));
             int i = 0;
 
             //cifrario RSA
-            Cipher cipherkey = Cipher.getInstance("RSA/" + Match.modi_operativi.get(this.modo_operativo) + "/" + Match.padding.get(this.padding) + "Padding");
+            //Cipher cipherkey = Cipher.getInstance("RSA/" + Match.modi_operativi.get(this.modo_operativo) + "/" + Match.padding.get(this.padding) + "Padding");
+            Cipher cipherkey = Cipher.getInstance("RSA/ECB/" + Match.padding.get(this.padding) + "Padding");
 
             //leggi chiave pubblica
             FileInputStream fis = new FileInputStream(keyFile);
@@ -233,7 +240,11 @@ public class NewFile {
 
             //Cipher cipherkey = Cipher.getInstance("RSA/"+Match.modi_operativi.get(this.modo_operativo)+"/"+Match.padding.get(this.padding));
             //cifro il messaggio
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            if(modo_operativo==(byte)0x00){
+                cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            } else {
+                cipher.init(Cipher.ENCRYPT_MODE, secretKey,new IvParameterSpec(iv));
+            }
             messaggio = (new FileInputStream(file)).readAllBytes();
             byte[] cyphertext = cipher.doFinal(this.messaggio);
             i=0;
@@ -243,6 +254,13 @@ public class NewFile {
             }
             os.flush();
             os.close();
+            FileInputStream fisdebug = new FileInputStream(destinazione);
+            byte[] readall = fisdebug.readAllBytes();
+            System.out.println("Stampa codifica");
+            for(byte b: readall){
+                System.out.println(b);
+            }
+            fisdebug.close();
             return true;
 
         } catch (IOException e) {
@@ -252,8 +270,19 @@ public class NewFile {
         }
     }
 
-    public boolean decodifica(File file, File destinazione, File keyFile) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    public boolean decodifica(File file, File destinazione, File keyFile) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
+
+        FileInputStream fisdebug = new FileInputStream(file);
+        byte[] readall = fisdebug.readAllBytes();
+        System.out.println("Stampa decodifica");
+        for(byte b: readall){
+            System.out.println(b);
+        }
+        fisdebug.close();
+
         FileInputStream fis = new FileInputStream(file);
+
+
 
         byte sl = (byte)'.';
         ArrayList<byte[]> params = new ArrayList<byte[]>();
@@ -263,14 +292,16 @@ public class NewFile {
         while(i < num){
             byte b = (byte)fis.read();
             ba.add(b);
-            if(b == '.'){
+            if(b == sl){
                 params.add(Utils.toByteArray(ba));
                 i++;
                 ba.clear();
             }
         }
-        this.mittente = Utils.byteArrayToString(params.get(0));
-        this.destinatario = Utils.byteArrayToString(params.get(1));
+        //this.mittente = Utils.byteArrayToString(params.get(0));
+        //this.destinatario = Utils.byteArrayToString(params.get(1));
+        this.mittente = new String(params.get(0), "UTF-8");
+        this.destinatario = new String(params.get(1), "UTF-8");
         this.cifrario_m = params.get(2)[0];
         this.cifrario_k = params.get(3)[0];
         this.padding = params.get(4)[0];
@@ -282,7 +313,7 @@ public class NewFile {
         this.dimensione_firma = params.get(10)[0];
 
         this.salt = fis.readNBytes(8);
-        if(this.modo_operativo==(byte)0x00){
+        if(this.cifrario_m==(byte)0x00){
             System.out.println("here");
             this.iv=fis.readNBytes(16);
         } else {
@@ -305,9 +336,9 @@ public class NewFile {
         KeyFactory kf = KeyFactory.getInstance("RSA");
         PrivateKey privateKey = kf.generatePrivate(ks);
 
-        Cipher cipherkey = Cipher.getInstance("RSA/" + Match.modi_operativi.get(this.modo_operativo) + "/" + Match.padding.get(this.padding) + "Padding");
+        //Cipher cipherkey = Cipher.getInstance("RSA/" + Match.modi_operativi.get(this.modo_operativo) + "/" + Match.padding.get(this.padding) + "Padding");
+        Cipher cipherkey = Cipher.getInstance("RSA/ECB/" + Match.padding.get(this.padding) + "Padding");
         cipherkey.init(Cipher.DECRYPT_MODE, privateKey);
-        System.out.println("RSA/" + Match.modi_operativi.get(this.modo_operativo) + "/" + Match.padding.get(this.padding) + "Padding");
 
         System.out.println("lunghezza chiave des aes " + secretKey.length + "\n" + secretKey[0]);
         byte[] secretKeyDecodedByte = cipherkey.doFinal(secretKey);
@@ -316,8 +347,11 @@ public class NewFile {
 
         //decodifica messaggio tramite chiave decodificata;
         Cipher cipher = Cipher.getInstance(Match.cifrario_m.get(this.cifrario_m) + "/" + Match.modi_operativi.get(this.modo_operativo) + "/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, secretKeyDecoded);
-
+        if(modo_operativo == (byte)0x00) {
+            cipher.init(Cipher.DECRYPT_MODE, secretKeyDecoded);
+        } else {
+            cipher.init(Cipher.DECRYPT_MODE, secretKeyDecoded, new IvParameterSpec(iv));
+        }
         this.messaggio = cipher.doFinal(messaggio);
 
         FileOutputStream fos = new FileOutputStream(destinazione);

@@ -176,6 +176,8 @@ public class GUI {
                             e1.printStackTrace();
                         } catch (IllegalBlockSizeException e1) {
                             e1.printStackTrace();
+                        } catch (InvalidAlgorithmParameterException e1) {
+                            e1.printStackTrace();
                         }
                     }
 
@@ -295,7 +297,6 @@ public class GUI {
         }
         byte modi_operativi = (byte) modiSelect.getSelectedIndex();
 
-
         System.out.println(mittente + " " + destinatario + " " + cifrario_m);
         NewFile f = new NewFile(mittente, destinatario, cifrario_m,
                 cifrario_k_dim, padding, integrita, null, modi_operativi, null, hash, mac, firma, dimFirma, null);
@@ -314,6 +315,8 @@ public class GUI {
         } catch (InvalidKeyException e) {
             e.printStackTrace();
         } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException e) {
             e.printStackTrace();
         }
     }
@@ -651,7 +654,7 @@ public class GUI {
         panel2.add(keyFileDecodeButton, gbc);
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridBagLayout());
-        tabbedPane1.addTab("Untitled", panel3);
+        tabbedPane1.addTab("Chiave RSA", panel3);
         generaCoppiaRSAButton = new JButton();
         generaCoppiaRSAButton.setText("Genera coppia RSA");
         gbc = new GridBagConstraints();
