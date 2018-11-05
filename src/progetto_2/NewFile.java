@@ -59,12 +59,14 @@ public class NewFile {
         Key privatekey = k.getPrivate();
         //System.out.println(publickey.getFormat() + " " + privatekey.getFormat() + " " + publickey.getEncoded().length + " " + privatekey.getEncoded().length + " " + Match.dimensione.get(size));
         FileOutputStream fos = new FileOutputStream(file);
+
         fos.write(publickey.getEncoded());
 
         fos.flush();
         fos.close();
         //System.out.println(file.getName() + " " + file.getParent() + " " + file.getPath());
         fos = new FileOutputStream(file.getPath().substring(0, file.getPath().length()-4) + "Private.txt");
+        fos.write(size);
         fos.write(privatekey.getEncoded());
         fos.flush();
         fos.close();
@@ -164,7 +166,16 @@ public class NewFile {
 
             //chiave messaggio
             keyGenerator = KeyGenerator.getInstance(Match.cifrario_m.get(this.cifrario_m));
-            keyGenerator.init(128);
+            //aes 128, des 56, triple des 112
+            int keySize;
+            if(cifrario_m==0){
+                keySize=128;
+            } else if(cifrario_m==1){
+                keySize=56;
+            } else {
+                keySize  =112;
+            }
+            keyGenerator.init(keySize);
             secretKey = keyGenerator.generateKey();
 
             //cifrario messaggio, AES o DES
@@ -320,17 +331,19 @@ public class NewFile {
             System.out.println("there");
             this.iv=fis.readNBytes(8);
         }
+        //trova lunghezza rsa
+        FileInputStream fisKey = new FileInputStream(keyFile);
 
-        byte[] secretKey = fis.readNBytes(128);
+        int rsaKeySize = (fisKey.read() +1)*128;
+        System.out.println("key size: " + rsaKeySize);
+        byte[] secretKey = fis.readNBytes(rsaKeySize);
         byte[] messaggio = fis.readAllBytes();
         fis.close();
 
-
-
         //decodifica chiave tramite RSA e privateRSAKey;
-        fis = new FileInputStream(keyFile);
-        byte[] privateKeyBytes = fis.readAllBytes();
-        fis.close();
+
+        byte[] privateKeyBytes = fisKey.readAllBytes();
+        fisKey.close();
 
         PKCS8EncodedKeySpec ks = new PKCS8EncodedKeySpec(privateKeyBytes);
         KeyFactory kf = KeyFactory.getInstance("RSA");
