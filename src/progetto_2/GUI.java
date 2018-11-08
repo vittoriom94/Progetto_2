@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.math.BigInteger;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.util.logging.Level;
@@ -282,27 +283,28 @@ public class GUI {
 
         byte padding = (byte) paddingRSASelect.getSelectedIndex();
         byte integrita;
+        byte type;
         byte hash = 0x08;
         byte mac = 0x08;
         byte firma = 0x08;
         byte dimFirma = 0x08;
         if (firmaRadio.isSelected()) {
             integrita = 0x00;
-            hash = (byte) DSASelect.getSelectedIndex();
-            hash = (byte) dimDSASelect.getSelectedIndex();
+            type = (byte) (DSASelect.getSelectedIndex()+8);
+            dimFirma = (byte) dimDSASelect.getSelectedIndex();
 
         } else if (MACRadio.isSelected()) {
             integrita = 0x01;
-            hash = (byte) macSelect.getSelectedIndex();
+            type = (byte) (macSelect.getSelectedIndex()+5);
         } else {
             integrita = 0x02;
-            hash = (byte) hashSelect.getSelectedIndex();
+            type = (byte) hashSelect.getSelectedIndex();
         }
         byte modi_operativi = (byte) modiSelect.getSelectedIndex();
 
         System.out.println(mittente + " " + destinatario + " " + cifrario_m);
         NewFile f = new NewFile(mittente, destinatario, cifrario_m,
-                cifrario_k_dim, padding, integrita, null, modi_operativi, null, hash, mac, firma, dimFirma, null);
+                cifrario_k_dim, padding, integrita, null, modi_operativi, null, type,type, type, dimFirma, null);
         try {
 
 
@@ -326,6 +328,11 @@ public class GUI {
 
 
     public static void main(String args[]) {
+        //Utils.createServers();
+        //SharesRing.distribute();
+        //System.out.println();
+
+
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.

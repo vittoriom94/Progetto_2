@@ -1,11 +1,12 @@
 package progetto_2;
 
-
 import java.io.*;
-import java.security.Key;
+import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.Map;
 
 public class KeyRing implements Serializable {
+    private String name = "";
     private HashMap<String, Byte[]> keys;
     public KeyRing(){
         this.keys = new HashMap<>();
@@ -20,7 +21,7 @@ public class KeyRing implements Serializable {
             kr = (KeyRing) ois.readObject();
             ois.close();
             fis.close();
-            return kr;
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -38,6 +39,23 @@ public class KeyRing implements Serializable {
 
     public void saveKey(byte[] k, String id){
         keys.put(id, Utils.frombyteToByte(k));
+    }
+
+
+    public void saveShamir(int k, int n){
+        SharesRing sr = SharesRing.loadSharesRing(new File("sharesRing.txt"));
+
+        SecretSharing ss = new SecretSharing(20);
+        for( Map.Entry<String,Byte[]> e : keys.entrySet()){
+            BigInteger secret = Utils.getBigInteger(Utils.fromByteTobyte(e.getValue()));
+            String id = name+"-"+e.getKey();
+            // le chiavi vanno da 1 a n
+            HashMap<BigInteger, BigInteger> shares = (HashMap<BigInteger, BigInteger>) ss.genShares(secret,k,n);
+            sr.add( id, shares);
+        }
+        sr.saveSharesRing(new File("sharesRing.txt"));
+
+
     }
 
     public void saveKeyring(File f){
