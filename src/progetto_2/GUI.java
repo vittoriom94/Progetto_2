@@ -79,6 +79,9 @@ public class GUI {
         dimDSASelect.setMaximumRowCount(2);
         dimDSASelect.setModel(new DefaultComboBoxModel<>(new String[]{"1024", "2048"}));
 
+        dimRSASelect.setMaximumRowCount(2);
+        dimRSASelect.setModel(new DefaultComboBoxModel<>(new String[]{"1024", "2048"}));
+
         DSASelect.setMaximumRowCount(3);
         DSASelect.setModel(new DefaultComboBoxModel<>(new String[]{"SHA1withDSA", "SHA224withDSA", "SHA256withDSA"}));
 
@@ -147,7 +150,7 @@ public class GUI {
         decodificaButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (decodificaFile != null && keyFileDecode != null) {
+                if (decodificaFile != null) {
                     // decodifica
 
                     JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
@@ -158,10 +161,9 @@ public class GUI {
 
                     if (returnValue == JFileChooser.APPROVE_OPTION) {
                         File destinationFile = fc.getSelectedFile();
-                        System.out.println(decodificaFile.getAbsolutePath());
                         NewFile nf = new NewFile();
                         try {
-                            nf.decodifica(decodificaFile, destinationFile, keyFileDecode);
+                            nf.decodifica(decodificaFile, destinationFile);
                         } catch (IOException e1) {
                             e1.printStackTrace();
                         } catch (NoSuchAlgorithmException e1) {
@@ -198,7 +200,7 @@ public class GUI {
                     NewFile nf = new NewFile();
 
                     try {
-                        nf.saveKeyPair(destinationFile, (byte) rsaSizeCreateKey.getSelectedIndex());
+                        nf.saveKeyPair((byte) rsaSizeCreateKey.getSelectedIndex(), "null");
 
                     } catch (NoSuchAlgorithmException e1) {
                         e1.printStackTrace();
@@ -269,7 +271,7 @@ public class GUI {
 
         int returnValue = fc.showSaveDialog(null);
 
-        if (keyFileEncode == null || codificaFile == null || returnValue != JFileChooser.APPROVE_OPTION) {
+        if ( codificaFile == null || returnValue != JFileChooser.APPROVE_OPTION) {
             return;
         }
         File destinationFile = fc.getSelectedFile();
@@ -277,6 +279,7 @@ public class GUI {
         String destinatario = destinatarioText.getText();
         byte cifrario_m = (byte) codificaMSelect.getSelectedIndex();
         byte cifrario_k_dim = (byte) dimRSASelect.getSelectedIndex();
+
         byte padding = (byte) paddingRSASelect.getSelectedIndex();
         byte integrita;
         byte hash = 0x08;
@@ -303,7 +306,7 @@ public class GUI {
         try {
 
 
-            f.codifica(keyFileEncode, codificaFile, destinationFile);
+            f.codifica(codificaFile, destinationFile);
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         } catch (NoSuchPaddingException ex) {

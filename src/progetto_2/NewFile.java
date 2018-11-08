@@ -30,6 +30,8 @@ public class NewFile {
     private byte dimensione_firma;//00 1024 ; 01 2048;
     private byte[] messaggio;
 
+    private KeyRing kr;
+
     public NewFile(String mittente, String destinatario, byte cifrario_m, byte cifrario_k, byte padding, byte integrita,
                    byte[] salt, byte modi_operativi, byte[] iv, byte hash, byte mac, byte firma, byte dimensione_firma, byte[] messaggio) {
         super();
@@ -45,20 +47,25 @@ public class NewFile {
         this.firma = firma;
         this.dimensione_firma = dimensione_firma;
         this.messaggio = messaggio;
+
+
     }
 
     public NewFile() {
     }
 
-    public void saveKeyPair(File file, byte size) throws NoSuchAlgorithmException, IOException {
-        KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
+    public void saveKeyPair(byte size, String type) throws NoSuchAlgorithmException, IOException {
+        KeyPairGenerator gen = KeyPairGenerator.getInstance(type);
 
         gen.initialize(Match.dimensione.get(size));
         KeyPair k = gen.generateKeyPair();
         Key publickey = k.getPublic();
         Key privatekey = k.getPrivate();
+
+        kr.saveKey(publickey.getEncoded(), type+"Public");
+        kr.saveKey(privatekey.getEncoded(),type+"Private");
         //System.out.println(publickey.getFormat() + " " + privatekey.getFormat() + " " + publickey.getEncoded().length + " " + privatekey.getEncoded().length + " " + Match.dimensione.get(size));
-        FileOutputStream fos = new FileOutputStream(file);
+        /*FileOutputStream fos = new FileOutputStream(file);
 
         fos.write(publickey.getEncoded());
 
@@ -70,31 +77,9 @@ public class NewFile {
         fos.write(privatekey.getEncoded());
         fos.flush();
         fos.close();
+        */
     }
 
-    public void creazione() {
-        try {
-            FileOutputStream file = new FileOutputStream("file.txt");
-            PrintStream Output = new PrintStream(file);
-            Output.print(mittente);
-            Output.print(destinatario);
-            Output.print(cifrario_m);
-            Output.print(cifrario_k);
-            Output.print(padding);
-            Output.print(integrita);
-            Output.print(salt[1]);
-            Output.print(modo_operativo);
-            Output.print(iv[1]);
-            Output.print(hash);
-            Output.print(mac);
-            Output.print(firma);
-            Output.print(dimensione_firma);
-            Output.println(messaggio[1]);
-        } catch (IOException e) {
-            System.out.println("Errore: " + e);
-            System.exit(1);
-        }
-    }
 
     // chiamato dalla soluzione 2
     private static void doCopy(InputStream is, OutputStream os)
@@ -110,11 +95,11 @@ public class NewFile {
 
 
     //aggiungere key publickey nel metodo
-    public boolean codifica(File keyFile, File file, File destinazione) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException, InvalidAlgorithmParameterException {
+    public boolean codifica(File file, File destinazione) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException, InvalidAlgorithmParameterException {
         try {
-            //chiave per il cifrario messaggio
-            KeyGenerator keyGenerator = KeyGenerator.getInstance(Match.cifrario_m.get(this.cifrario_m));
-            SecretKey secretKey = keyGenerator.generateKey();
+
+            kr = new KeyRing();
+
             /*
 		  	//Soluzione 1
 		  	  int BUFFER = 8;
@@ -147,25 +132,10 @@ public class NewFile {
 
 
             FileOutputStream os = new FileOutputStream(destinazione);
-            /*
-            PrintStream Output = new PrintStream(file);
-            Output.print(mittente + "_");
-            Output.print(destinatario + "_");
-            Output.print(cifrario_m + "_");
-            Output.print(cifrario_k + "_");
-            Output.print(padding + "_");
-            Output.print(integrita + "_");
-            Output.print(salt[1] + "_");
-            Output.print(modo_operativo + "_");
-            Output.print(iv[1] + "_");
-            Output.print(hash + "_");
-            Output.print(mac + "_");
-            Output.print(firma + "_");
-            Output.println(dimensione_firma + "_");
-            */
+
 
             //chiave messaggio
-            keyGenerator = KeyGenerator.getInstance(Match.cifrario_m.get(this.cifrario_m));
+            KeyGenerator keyGenerator = KeyGenerator.getInstance(Match.cifrario_m.get(this.cifrario_m));
             //aes 128, des 56, triple des 112
             int keySize;
             if(cifrario_m==0){
@@ -176,7 +146,7 @@ public class NewFile {
                 keySize  =112;
             }
             keyGenerator.init(keySize);
-            secretKey = keyGenerator.generateKey();
+            SecretKey secretKey = keyGenerator.generateKey();
 
             //cifrario messaggio, AES o DES
             Cipher cipher = Cipher.getInstance(Match.cifrario_m.get(this.cifrario_m) + "/" + Match.modi_operativi.get(this.modo_operativo) + "/PKCS5Padding");
@@ -220,16 +190,14 @@ public class NewFile {
                 Arrays.fill(iv, (byte)0x00);
             }
             bytes.addAll(Utils.toByteArrayNonprimitive(iv));
-            // MODO OPERATIVO DA ERRORE; CON HASH FUNZIONA
-            //BASE O NO é UGUALE
-            //os.write(Base64.getEncoder().encode(Utils.toByteArray(bytes)));
+
             os.write(Utils.toByteArray(bytes));
             int i = 0;
 
             //cifrario RSA
             //Cipher cipherkey = Cipher.getInstance("RSA/" + Match.modi_operativi.get(this.modo_operativo) + "/" + Match.padding.get(this.padding) + "Padding");
             Cipher cipherkey = Cipher.getInstance("RSA/ECB/" + Match.padding.get(this.padding) + "Padding");
-
+            /*
             //leggi chiave pubblica
             FileInputStream fis = new FileInputStream(keyFile);
             byte[] publickeyBytes = fis.readAllBytes();
@@ -238,16 +206,26 @@ public class NewFile {
             X509EncodedKeySpec ks = new X509EncodedKeySpec(publickeyBytes);
             KeyFactory kf = KeyFactory.getInstance("RSA");
             PublicKey publickey = kf.generatePublic(ks);
+            */
+
+            //genera chiave pubblica e privata
+            saveKeyPair( cifrario_k,"RSA");
+            
 
             //cifra la chiave
+            X509EncodedKeySpec ks = new X509EncodedKeySpec(kr.getKey("RSAPublic"));
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            PublicKey publickey = kf.generatePublic(ks);
+
             cipherkey.init(Cipher.ENCRYPT_MODE, publickey);
             byte byteKey[] = secretKey.getEncoded();
             byte[] cypherkey = cipherkey.doFinal(byteKey);
             System.out.println("lunghezza chiave des aes " + cypherkey.length + "\n" + cypherkey[0]);
-            while (i < cypherkey.length) {
+            /*while (i < cypherkey.length) {
                 os.write(cypherkey[i]);
                 i++;
-            }
+            }*/
+            kr.saveKey(cypherkey,"Secret");
 
             //Cipher cipherkey = Cipher.getInstance("RSA/"+Match.modi_operativi.get(this.modo_operativo)+"/"+Match.padding.get(this.padding));
             //cifro il messaggio
@@ -272,6 +250,9 @@ public class NewFile {
                 System.out.println(b);
             }
             fisdebug.close();
+
+
+            kr.saveKeyring(new File(destinazione.getPath().substring(0, destinazione.getPath().length()-4) + "Keyring.txt"));
             return true;
 
         } catch (IOException e) {
@@ -281,15 +262,9 @@ public class NewFile {
         }
     }
 
-    public boolean decodifica(File file, File destinazione, File keyFile) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
+    public boolean decodifica(File file, File destinazione) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
 
-        FileInputStream fisdebug = new FileInputStream(file);
-        byte[] readall = fisdebug.readAllBytes();
-        System.out.println("Stampa decodifica");
-        for(byte b: readall){
-            System.out.println(b);
-        }
-        fisdebug.close();
+        kr = KeyRing.loadKeyring(new File(file.getPath().substring(0, file.getPath().length()-4) + "Keyring.txt"));
 
         FileInputStream fis = new FileInputStream(file);
 
@@ -332,20 +307,21 @@ public class NewFile {
             this.iv=fis.readNBytes(8);
         }
         //trova lunghezza rsa
-        FileInputStream fisKey = new FileInputStream(keyFile);
+        //FileInputStream fisKey = new FileInputStream(keyFile);
 
-        int rsaKeySize = (fisKey.read() +1)*128;
-        System.out.println("key size: " + rsaKeySize);
-        byte[] secretKey = fis.readNBytes(rsaKeySize);
+        //int rsaKeySize = (fisKey.read() +1)*128;
+        //System.out.println("key size: " + rsaKeySize);
+        //byte[] secretKey = fis.readNBytes(rsaKeySize);
+        byte[] secretKey = kr.getKey("Secret");
         byte[] messaggio = fis.readAllBytes();
         fis.close();
 
         //decodifica chiave tramite RSA e privateRSAKey;
 
-        byte[] privateKeyBytes = fisKey.readAllBytes();
-        fisKey.close();
+        //byte[] privateKeyBytes = fisKey.readAllBytes();
+        //fisKey.close();
 
-        PKCS8EncodedKeySpec ks = new PKCS8EncodedKeySpec(privateKeyBytes);
+        PKCS8EncodedKeySpec ks = new PKCS8EncodedKeySpec(kr.getKey("RSAPrivate"));
         KeyFactory kf = KeyFactory.getInstance("RSA");
         PrivateKey privateKey = kf.generatePrivate(ks);
 

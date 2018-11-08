@@ -4,6 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Utils {
+    public static Byte[] frombyteToByte(byte[] bytes) {
+
+        Byte[] byteObjects = new Byte[bytes.length];
+
+        int i = 0;
+        for (byte b : bytes)
+            byteObjects[i++] = b;  // Autoboxing.
+        return byteObjects;
+    }
+    public static byte[] fromByteTobyte(Byte[] byteObjects) {
+        byte[] bytes = new byte[byteObjects.length];
+        int j = 0;
+        for (Byte b : byteObjects)
+            bytes[j++] = b.byteValue();
+        return bytes;
+    }
+
 
     public static ArrayList<Byte> toByteArrayNonprimitive(byte[] bytes){
         System.out.println(bytes);
