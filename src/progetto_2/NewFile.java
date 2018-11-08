@@ -24,16 +24,16 @@ public class NewFile {
     private byte[] salt;//8 byte
     private byte modo_operativo;//00 ECB ; 01 CBC ; 02 CFB
     private byte[] iv;//8 byte des/triple des;16 aes
-    private byte hash;//00 SHA1 ; 01 SHA224 ; 02 ; SHA256 ; 03 SHA384 ; 04 SHA512
-    private byte mac;//00 MD5 ; 01 SHA256 ; 03 SHA384
-    private byte firma;//00 SHA1; 02 SHA224; 04 SHA256
+    private byte tipo;//00 SHA1 ; 01 SHA224 ; 02 ; SHA256 ; 03 SHA384 ; 04 SHA512
+    					//05 MD5 ; 06 SHA256 ; 07 SHA384
+    						//08 SHA1; 09 SHA224; 10 SHA256
     private byte dimensione_firma;//00 1024 ; 01 2048;
     private byte[] messaggio;
 
     private KeyRing kr;
 
     public NewFile(String mittente, String destinatario, byte cifrario_m, byte cifrario_k, byte padding, byte integrita,
-                   byte[] salt, byte modi_operativi, byte[] iv, byte hash, byte mac, byte firma, byte dimensione_firma, byte[] messaggio) {
+                   byte[] salt, byte modi_operativi, byte[] iv, byte tipo, byte dimensione_firma, byte[] messaggio) {
         super();
         this.mittente = mittente;
         this.destinatario = destinatario;
@@ -42,13 +42,9 @@ public class NewFile {
         this.padding = padding;
         this.integrita = integrita;
         this.modo_operativo = modi_operativi;
-        this.hash = hash;
-        this.mac = mac;
-        this.firma = firma;
+        this.tipo=tipo;
         this.dimensione_firma = dimensione_firma;
         this.messaggio = messaggio;
-
-
     }
 
     public NewFile() {
@@ -132,7 +128,7 @@ public class NewFile {
 
 
             FileOutputStream os = new FileOutputStream(destinazione);
-
+            
 
             //chiave messaggio
             KeyGenerator keyGenerator = KeyGenerator.getInstance(Match.cifrario_m.get(this.cifrario_m));
@@ -171,11 +167,7 @@ public class NewFile {
             bytes.add(sl);
             bytes.add(modo_operativo);
             bytes.add(sl);
-            bytes.add(hash);
-            bytes.add(sl);
-            bytes.add(mac);
-            bytes.add(sl);
-            bytes.add(firma);
+            bytes.add(tipo);
             bytes.add(sl);
             bytes.add(dimensione_firma);
             bytes.add(sl);
@@ -226,23 +218,50 @@ public class NewFile {
                 i++;
             }*/
             kr.saveKey(cypherkey,"Secret");
-
+            int lunghezza;
+            if(Match.tipo.get(this.tipo)=="HmacMD5") 
+            	lunghezza = 16;
+            if(Match.tipo.get(this.tipo)=="HmacSHA256") 
+            	lunghezza = 32;	
+            if(Match.tipo.get(this.tipo)=="HmacSHA384") 
+            	lunghezza = 48;
+            byte b[] = new byte[lunghezza];
+            bytes.addAll(Utils.toByteArrayNonprimitive(b));
             //Cipher cipherkey = Cipher.getInstance("RSA/"+Match.modi_operativi.get(this.modo_operativo)+"/"+Match.padding.get(this.padding));
-            //cifro il messaggio
-            if(modo_operativo==(byte)0x00){
-                cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            } else {
-                cipher.init(Cipher.ENCRYPT_MODE, secretKey,new IvParameterSpec(iv));
-            }
-            messaggio = (new FileInputStream(file)).readAllBytes();
-            byte[] cyphertext = cipher.doFinal(this.messaggio);
-            i=0;
-            while (i < cyphertext.length) {
-                os.write(cyphertext[i]);
-                i++;
-            }
-            os.flush();
-            os.close();
+            //mac+messaggio
+            if(integrita == 0){
+            	KeyGenerator keygen = KeyGenerator.getInstance(Match.tipo.get(this.tipo));
+            	Key macKey = keygen.generateKey();
+            	kr.saveKey(macKey.getEncoded(), "MAC");
+            	Mac mac = Mac.getInstance(Match.tipo.get(this.tipo));
+            	mac.init(macKey);
+            	if(modo_operativo==(byte)0x00){
+            		cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            	} else {
+            		cipher.init(Cipher.ENCRYPT_MODE, secretKey,new IvParameterSpec(iv));
+            	}
+            	int content1 = 8;
+            	FileInputStream f = new FileInputStream(file);
+            	while (content1 == 8) {
+            		messaggio = f.readNBytes(content1);
+            		content1 = messaggio.length;
+            		mac.update(messaggio);	
+            		cipher.update(messaggio);
+            	}
+            	byte[] macBytes2 = mac.doFinal();
+            	byte[] cyphertext = cipher.doFinal();
+            	i=0;
+            	os.flush();
+            	os.close();
+            	
+            	while (i < cyphertext.length) {
+            		os.write(cyphertext[i]);
+            		i++;
+            	}
+            	os.flush();
+            	os.close();
+
+            /*
             FileInputStream fisdebug = new FileInputStream(destinazione);
             byte[] readall = fisdebug.readAllBytes();
             System.out.println("Stampa codifica");
@@ -254,13 +273,14 @@ public class NewFile {
 
             kr.saveKeyring(new File(destinazione.getPath().substring(0, destinazione.getPath().length()-4) + "Keyring.txt"));
             return true;
-
+*/}
         } catch (IOException e) {
             System.out.println("Errore: " + e);
             System.exit(1);
             return false;
         }
-    }
+		return false;
+  }
 
     public boolean decodifica(File file, File destinazione) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
 
@@ -272,7 +292,7 @@ public class NewFile {
 
         byte sl = (byte)'.';
         ArrayList<byte[]> params = new ArrayList<byte[]>();
-        int num = 11;
+        int num = 9;
         int i = 0;
         ArrayList<Byte> ba = new ArrayList<Byte>();
         while(i < num){
@@ -293,10 +313,8 @@ public class NewFile {
         this.padding = params.get(4)[0];
         this.integrita = params.get(5)[0];
         this.modo_operativo = params.get(6)[0];
-        this.hash = params.get(7)[0];
-        this.mac = params.get(8)[0];
-        this.firma = params.get(9)[0];
-        this.dimensione_firma = params.get(10)[0];
+        this.tipo = params.get(7)[0];
+        this.dimensione_firma = params.get(8)[0];
 
         this.salt = fis.readNBytes(8);
         if(this.cifrario_m==(byte)0x00){

@@ -14,20 +14,18 @@ public class Match {
 			(byte)0x00 , "ECB",
 			(byte)0x01 , "CBC",
 			(byte)0x02 , "CFB") ; 
-	public static Map<Byte,String> hash= Map.of(
-			(byte)0x00 , "SHA-1",
-			(byte)0x01 , "SHA-224",
-			(byte)0x02 , "SHA-256",
-			(byte)0x03 , "SHA-384",
-			(byte)0x04 , "SHA-512") ; 
-	public static Map<Byte,String> mac= Map.of(
-			(byte)0x00 , "HmacMD5",
-			(byte)0x01 , "HmacSHA256",
-			(byte)0x02 , "HmacSHA384") ; 
-	public static Map<Byte,String> firma= Map.of(
-			(byte)0x00 , "SHA1withDSA",
-			(byte)0x01 , "SHA256withDSA",
-			(byte)0x02 , "SHA256withDSA");
+	public static Map<Byte,String> tipo= Map.ofEntries(
+			Map.entry((byte)0x00, "SHA-1"),
+			Map.entry((byte)0x01, "SHA-224"),
+			Map.entry((byte)0x02, "SHA-256"),
+			Map.entry((byte)0x03, "SHA-384"),
+			Map.entry((byte)0x04, "SHA-512"),
+			Map.entry((byte)0x05, "HmacMD5"),
+			Map.entry((byte)0x06, "HmacSHA256"),
+			Map.entry((byte)0x07, "HmacSHA384"),
+			Map.entry((byte)0x08, "SHA1withDSA"),
+			Map.entry((byte)0x09, "SHA226withDSA"),
+			Map.entry((byte)0x10, "SHA256withDSA"));
 	public static Map<Byte,Integer> dimensione= Map.of(
 			(byte)0x00 , 1024,
 			(byte)0x01 , 2048) ; 
