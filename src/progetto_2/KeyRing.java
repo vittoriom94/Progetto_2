@@ -8,8 +8,9 @@ import java.util.Map;
 public class KeyRing implements Serializable {
     private String name = "";
     private HashMap<String, Byte[]> keys;
-    public KeyRing(){
+    public KeyRing(String nomefile){
         this.keys = new HashMap<>();
+        this.name = nomefile;
     }
 
     public static KeyRing loadKeyring(File f){
@@ -44,13 +45,16 @@ public class KeyRing implements Serializable {
 
     public void saveShamir(int k, int n){
         SharesRing sr = SharesRing.loadSharesRing(new File("sharesRing.txt"));
-
-        SecretSharing ss = new SecretSharing(20);
+        if(sr==null){
+            sr = new SharesRing();
+        }
+        SecretSharing ss = new SecretSharing(1500);
         for( Map.Entry<String,Byte[]> e : keys.entrySet()){
             BigInteger secret = Utils.getBigInteger(Utils.fromByteTobyte(e.getValue()));
-            String id = name+"-"+e.getKey();
+            String id = name+"-"+e.getKey()+"-"+ss.getP().toString();
             // le chiavi vanno da 1 a n
             HashMap<BigInteger, BigInteger> shares = (HashMap<BigInteger, BigInteger>) ss.genShares(secret,k,n);
+
             sr.add( id, shares);
         }
         sr.saveSharesRing(new File("sharesRing.txt"));

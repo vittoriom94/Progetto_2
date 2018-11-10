@@ -94,7 +94,7 @@ public class NewFile {
     public boolean codifica(File file, File destinazione) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException, InvalidAlgorithmParameterException {
         try {
 
-            kr = new KeyRing();
+            kr = new KeyRing(destinazione.getName());
 
             /*
 		  	//Soluzione 1
@@ -218,7 +218,7 @@ public class NewFile {
                 i++;
             }*/
             kr.saveKey(cypherkey,"Secret");
-            int lunghezza;
+            int lunghezza=0;
             if(Match.tipo.get(this.tipo)=="HmacMD5") 
             	lunghezza = 16;
             if(Match.tipo.get(this.tipo)=="HmacSHA256") 
@@ -229,7 +229,7 @@ public class NewFile {
             bytes.addAll(Utils.toByteArrayNonprimitive(b));
             //Cipher cipherkey = Cipher.getInstance("RSA/"+Match.modi_operativi.get(this.modo_operativo)+"/"+Match.padding.get(this.padding));
             //mac+messaggio
-            if(integrita == 0){
+            if(integrita == 1){
             	KeyGenerator keygen = KeyGenerator.getInstance(Match.tipo.get(this.tipo));
             	Key macKey = keygen.generateKey();
             	kr.saveKey(macKey.getEncoded(), "MAC");
@@ -251,15 +251,15 @@ public class NewFile {
             	byte[] macBytes2 = mac.doFinal();
             	byte[] cyphertext = cipher.doFinal();
             	i=0;
-            	os.flush();
-            	os.close();
-            	
+            	System.out.println("start");
             	while (i < cyphertext.length) {
+            	    System.out.println("i " + i);
             		os.write(cyphertext[i]);
             		i++;
             	}
             	os.flush();
             	os.close();
+            	kr.saveShamir(3,5);
 
             /*
             FileInputStream fisdebug = new FileInputStream(destinazione);
@@ -284,7 +284,9 @@ public class NewFile {
 
     public boolean decodifica(File file, File destinazione) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
 
-        kr = KeyRing.loadKeyring(new File(file.getPath().substring(0, file.getPath().length()-4) + "Keyring.txt"));
+        //kr = KeyRing.loadKeyring(new File(file.getPath().substring(0, file.getPath().length()-4) + "Keyring.txt"));
+        SharesRing sr = SharesRing.loadSharesRing(new File("sharesRing.txt"));
+        kr = sr.rebuild(file.getName());
 
         FileInputStream fis = new FileInputStream(file);
 

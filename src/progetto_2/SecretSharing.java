@@ -14,6 +14,13 @@ public class SecretSharing {
         p = generatePrime(bitLength);
     }
 
+    public SecretSharing(BigInteger p ){
+        this.p = p;
+        bitLength = p.bitLength();
+    }
+    public BigInteger getP(){
+        return p;
+    }
 
     public static BigInteger generatePrime(int bl) {
         boolean value = false;

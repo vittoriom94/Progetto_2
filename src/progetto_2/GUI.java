@@ -304,7 +304,7 @@ public class GUI {
 
         System.out.println(mittente + " " + destinatario + " " + cifrario_m);
         NewFile f = new NewFile(mittente, destinatario, cifrario_m,
-                cifrario_k_dim, padding, integrita, null, modi_operativi, null, type,type, type, dimFirma, null);
+                cifrario_k_dim, padding, integrita, null, modi_operativi, null, type, dimFirma, null);
         try {
 
 
@@ -328,7 +328,7 @@ public class GUI {
 
 
     public static void main(String args[]) {
-        //Utils.createServers();
+        Utils.createServers();
         //SharesRing.distribute();
         //System.out.println();
 

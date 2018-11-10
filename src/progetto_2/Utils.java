@@ -3,9 +3,11 @@ package progetto_2;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 public class Utils {
 
@@ -17,7 +19,7 @@ public class Utils {
         names.add("Amazon");
         names.add("Aruba");
 
-        for(int i = 0;i<5;i++){
+        for(int i = 0;i<names.size();i++){
             File f = new File("server/0"+(i+1)+ " " +names.remove(0) + "/");
             if(!f.exists()){
                 f.mkdir();
@@ -82,6 +84,14 @@ public class Utils {
         for(byte b : bytes){
             s=s+(char)b;
         }
+        return s;
+    }
+
+    public static String randomName(){
+        String s;
+        byte[] arr = new byte[16];
+        new Random().nextBytes(arr);
+        s = new String(arr, Charset.forName("UTF-8"));
         return s;
     }
 }
