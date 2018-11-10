@@ -4,14 +4,15 @@ import java.io.*;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
-public class SharesRing {
-    //String = nomefile|tipochiave|p-n
+public class SharesRing implements Serializable{
+    //String = nomefile|tipochiave|p
     //hashMap <server, share>
-    HashMap<String, HashMap<BigInteger,BigInteger>>  map = new HashMap<>();
+    private transient HashMap<String, HashMap<BigInteger,BigInteger>>   map = new HashMap<>();
+    private BigInteger p;
 
-
-    HashMap<String, HashMap<Integer,String>>  mapFiles = new HashMap<>();
+    private HashMap<String, HashMap<Integer,String>>  mapFiles = new HashMap<>();
 
     public void add(String id, HashMap<BigInteger,BigInteger> shares){
         //Devo distribuirle qui
@@ -20,6 +21,13 @@ public class SharesRing {
         map.put(id, shares);
     }
 
+    private void initialize(){
+        map = new HashMap<>();
+    }
+
+    public BigInteger getP(){
+        return p;
+    }
     public void setMapFiles(HashMap<String, HashMap<Integer,String>>  mapFiles){
         this.mapFiles = mapFiles;
     }
@@ -31,26 +39,29 @@ public class SharesRing {
         }
         try {
 
-            FileInputStream fos = new FileInputStream(f);
-            ObjectInputStream oos = new ObjectInputStream(fos);
-            sr.setMapFiles((HashMap<String, HashMap<Integer, String>>)oos.readObject());
-            oos.close();
-            fos.close();
+            FileInputStream fis = new FileInputStream(f);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            sr = (SharesRing) ois.readObject();
+            sr.initialize();
+            ois.close();
+            fis.close();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+
         return sr;
     }
 
-    public void saveSharesRing(File f){
+    public void saveSharesRing(File f, BigInteger p){
+        this.p = p;
         distribute();
         try {
             FileOutputStream fos = new FileOutputStream(f);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
 
-            oos.writeObject(this.mapFiles);
+            oos.writeObject(this);
 
             oos.close();
             fos.close();
@@ -76,9 +87,9 @@ public class SharesRing {
         }
         KeyRing kr = new KeyRing(nomefile);
         for(String s : mapFiles.keySet()){
-            String name = s.split("|")[0];
-            String key = s.split("|")[1];
-            BigInteger p =  new BigInteger(s.split("|")[2]);
+            String name = s.split("-")[0];
+            String key = s.split("-")[1];
+
             SecretSharing sh = new SecretSharing(p);
             int i=0;
             if(name.equalsIgnoreCase(nomefile)){
@@ -89,7 +100,7 @@ public class SharesRing {
                     byte[] share = getShare((Integer)e.getKey(), (String)e.getValue());
                     if(share!=null){
                         i++;
-                        shares.put(BigInteger.valueOf((int)e.getKey()), Utils.getBigInteger(share));
+                        shares.put(BigInteger.valueOf((int)e.getKey()), new BigInteger(share));
 
                     }
                 }
@@ -110,10 +121,13 @@ public class SharesRing {
             servers[num] = dir;
         }
 
-        File f = new File(servers[i].getAbsolutePath() + "/" + name + ".share");
+        File f = new File(servers[i-1].getAbsolutePath() + "/" + name + ".share");
         if(f.exists()){
             try {
-                return new FileInputStream(f).readAllBytes();
+                FileInputStream fis = new FileInputStream(f);
+                byte[] b =  fis.readAllBytes();
+                fis.close();
+                return b;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -142,12 +156,14 @@ public class SharesRing {
                         File f;
                         String nomeShare;
                         do {
-                            nomeShare = Utils.randomName();
-                            f = new File(servers[bi.intValue()].getAbsolutePath() + "/" + nomeShare + ".share");
+
+                            nomeShare = UUID.randomUUID().toString();
+                            f = new File(servers[bi.intValue()-1].getAbsolutePath() + "/" + nomeShare + ".share");
                         } while(f.exists());
                         f.createNewFile();
                         FileOutputStream fos = new FileOutputStream(f);
-                        fos.write(Utils.getbyteFromBigInteger(map.get(s).get(bi)));
+                        //fos.write(Utils.getbyteFromBigInteger(map.get(s).get(bi)));
+                        fos.write(map.get(s).get(bi).toByteArray());
                         fos.flush();
                         fos.close();
 

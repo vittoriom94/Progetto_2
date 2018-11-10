@@ -250,6 +250,8 @@ public class NewFile {
             	}
             	byte[] macBytes2 = mac.doFinal();
             	byte[] cyphertext = cipher.doFinal();
+
+                System.out.println("messaggio codificato " + Utils.byteArrayToString(cyphertext));
             	i=0;
             	System.out.println("start");
             	while (i < cyphertext.length) {
@@ -334,6 +336,7 @@ public class NewFile {
         //byte[] secretKey = fis.readNBytes(rsaKeySize);
         byte[] secretKey = kr.getKey("Secret");
         byte[] messaggio = fis.readAllBytes();
+        System.out.println("messaggio codificato " + Utils.byteArrayToString(messaggio));
         fis.close();
 
         //decodifica chiave tramite RSA e privateRSAKey;

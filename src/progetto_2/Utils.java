@@ -1,7 +1,6 @@
 package progetto_2;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -18,8 +17,8 @@ public class Utils {
         names.add("OneDrive");
         names.add("Amazon");
         names.add("Aruba");
-
-        for(int i = 0;i<names.size();i++){
+        int n = names.size();
+        for(int i = 0;i<n;i++){
             File f = new File("server/0"+(i+1)+ " " +names.remove(0) + "/");
             if(!f.exists()){
                 f.mkdir();
@@ -37,12 +36,13 @@ public class Utils {
         return new BigInteger(b2);
     }
     public static byte[] getbyteFromBigInteger(BigInteger bi){
-        byte[] b = bi.toByteArray();
+        return bi.toByteArray();
+        /*byte[] b = bi.toByteArray();
         byte[] b2 = new byte[b.length-1];
         for(int i = 1;i<b.length;i++){
             b2[i-1]= b[i];
         }
-        return b2;
+        return b2;*/
     }
 
     public static Byte[] frombyteToByte(byte[] bytes) {
@@ -93,5 +93,18 @@ public class Utils {
         new Random().nextBytes(arr);
         s = new String(arr, Charset.forName("UTF-8"));
         return s;
+    }
+
+    public static void TestBiginteger() throws IOException {
+        BigInteger bi = BigInteger.probablePrime(10, new Random());
+        FileOutputStream fos = new FileOutputStream(new File(("prova.txt")));
+        fos.write(bi.toByteArray());
+        fos.flush();
+        fos.close();
+        FileInputStream fis = new FileInputStream(new File(("prova.txt")));
+        byte[] b = fis.readAllBytes();
+        BigInteger bi2 = new BigInteger(b);
+        fis.close();
+        System.out.println("ok");
     }
 }

@@ -45,19 +45,23 @@ public class KeyRing implements Serializable {
 
     public void saveShamir(int k, int n){
         SharesRing sr = SharesRing.loadSharesRing(new File("sharesRing.txt"));
+        SecretSharing ss;
         if(sr==null){
             sr = new SharesRing();
+            ss = new SecretSharing(6000);
+        } else {
+            ss = new SecretSharing(sr.getP());
         }
-        SecretSharing ss = new SecretSharing(1500);
+
         for( Map.Entry<String,Byte[]> e : keys.entrySet()){
             BigInteger secret = Utils.getBigInteger(Utils.fromByteTobyte(e.getValue()));
-            String id = name+"-"+e.getKey()+"-"+ss.getP().toString();
+            String id = name+"-"+e.getKey();
             // le chiavi vanno da 1 a n
             HashMap<BigInteger, BigInteger> shares = (HashMap<BigInteger, BigInteger>) ss.genShares(secret,k,n);
 
             sr.add( id, shares);
         }
-        sr.saveSharesRing(new File("sharesRing.txt"));
+        sr.saveSharesRing(new File("sharesRing.txt"), ss.getP());
 
 
     }

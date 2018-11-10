@@ -272,7 +272,7 @@ public class GUI {
 
         int returnValue = fc.showSaveDialog(null);
 
-        if ( codificaFile == null || returnValue != JFileChooser.APPROVE_OPTION) {
+        if (codificaFile == null || returnValue != JFileChooser.APPROVE_OPTION) {
             return;
         }
         File destinationFile = fc.getSelectedFile();
@@ -290,12 +290,12 @@ public class GUI {
         byte dimFirma = 0x08;
         if (firmaRadio.isSelected()) {
             integrita = 0x00;
-            type = (byte) (DSASelect.getSelectedIndex()+8);
+            type = (byte) (DSASelect.getSelectedIndex() + 8);
             dimFirma = (byte) dimDSASelect.getSelectedIndex();
 
         } else if (MACRadio.isSelected()) {
             integrita = 0x01;
-            type = (byte) (macSelect.getSelectedIndex()+5);
+            type = (byte) (macSelect.getSelectedIndex() + 5);
         } else {
             integrita = 0x02;
             type = (byte) hashSelect.getSelectedIndex();
@@ -327,10 +327,11 @@ public class GUI {
     }
 
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws IOException {
         Utils.createServers();
         //SharesRing.distribute();
         //System.out.println();
+
 
 
         /* Set the Nimbus look and feel */
@@ -439,26 +440,12 @@ public class GUI {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel1.add(codificaMSelect, gbc);
         final JLabel label2 = new JLabel();
-        label2.setText("Dimensione RSA");
-        gbc = new GridBagConstraints();
-        gbc.gridx = 2;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
-        panel1.add(label2, gbc);
-        dimRSASelect = new JComboBox();
-        gbc = new GridBagConstraints();
-        gbc.gridx = 2;
-        gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel1.add(dimRSASelect, gbc);
-        final JLabel label3 = new JLabel();
-        label3.setText("Hash");
+        label2.setText("Hash");
         gbc = new GridBagConstraints();
         gbc.gridx = 4;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
-        panel1.add(label3, gbc);
+        panel1.add(label2, gbc);
         hashSelect = new JComboBox();
         gbc = new GridBagConstraints();
         gbc.gridx = 4;
@@ -466,20 +453,20 @@ public class GUI {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel1.add(hashSelect, gbc);
-        final JLabel label4 = new JLabel();
-        label4.setText("MAC");
+        final JLabel label3 = new JLabel();
+        label3.setText("MAC");
         gbc = new GridBagConstraints();
         gbc.gridx = 6;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
-        panel1.add(label4, gbc);
-        final JLabel label5 = new JLabel();
-        label5.setText("Firma");
+        panel1.add(label3, gbc);
+        final JLabel label4 = new JLabel();
+        label4.setText("Firma");
         gbc = new GridBagConstraints();
         gbc.gridx = 8;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
-        panel1.add(label5, gbc);
+        panel1.add(label4, gbc);
         macSelect = new JComboBox();
         gbc = new GridBagConstraints();
         gbc.gridx = 6;
@@ -494,27 +481,20 @@ public class GUI {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel1.add(DSASelect, gbc);
-        final JLabel label6 = new JLabel();
-        label6.setText("Modo Operativo");
+        final JLabel label5 = new JLabel();
+        label5.setText("Modo Operativo");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.WEST;
-        panel1.add(label6, gbc);
-        final JLabel label7 = new JLabel();
-        label7.setText("Padding RSA");
-        gbc = new GridBagConstraints();
-        gbc.gridx = 2;
-        gbc.gridy = 2;
-        gbc.anchor = GridBagConstraints.WEST;
-        panel1.add(label7, gbc);
-        final JLabel label8 = new JLabel();
-        label8.setText("Dimensione Firma");
+        panel1.add(label5, gbc);
+        final JLabel label6 = new JLabel();
+        label6.setText("Dimensione Firma");
         gbc = new GridBagConstraints();
         gbc.gridx = 8;
         gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.WEST;
-        panel1.add(label8, gbc);
+        panel1.add(label6, gbc);
         modiSelect = new JComboBox();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -522,13 +502,6 @@ public class GUI {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel1.add(modiSelect, gbc);
-        paddingRSASelect = new JComboBox();
-        gbc = new GridBagConstraints();
-        gbc.gridx = 2;
-        gbc.gridy = 3;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel1.add(paddingRSASelect, gbc);
         dimDSASelect = new JComboBox();
         gbc = new GridBagConstraints();
         gbc.gridx = 8;
@@ -624,6 +597,34 @@ public class GUI {
         gbc.gridy = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel1.add(keyFileButton, gbc);
+        paddingRSASelect = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(paddingRSASelect, gbc);
+        final JLabel label7 = new JLabel();
+        label7.setText("Padding RSA");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel1.add(label7, gbc);
+        final JLabel label8 = new JLabel();
+        label8.setText("Dimensione RSA");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel1.add(label8, gbc);
+        dimRSASelect = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(dimRSASelect, gbc);
         final JPanel panel2 = new JPanel();
         panel2.setLayout(new GridBagLayout());
         tabbedPane1.addTab("Decodifica", panel2);
