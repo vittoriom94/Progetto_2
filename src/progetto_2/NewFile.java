@@ -347,7 +347,6 @@ public class NewFile {
         PKCS8EncodedKeySpec ks = new PKCS8EncodedKeySpec(kr.getKey("RSAPrivate"));
         KeyFactory kf = KeyFactory.getInstance("RSA");
         PrivateKey privateKey = kf.generatePrivate(ks);
-
         //Cipher cipherkey = Cipher.getInstance("RSA/" + Match.modi_operativi.get(this.modo_operativo) + "/" + Match.padding.get(this.padding) + "Padding");
         Cipher cipherkey = Cipher.getInstance("RSA/ECB/" + Match.padding.get(this.padding) + "Padding");
         cipherkey.init(Cipher.DECRYPT_MODE, privateKey);

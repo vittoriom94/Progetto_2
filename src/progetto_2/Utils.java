@@ -1,8 +1,13 @@
 package progetto_2;
 
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
 import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,8 +23,11 @@ public class Utils {
         names.add("Amazon");
         names.add("Aruba");
         int n = names.size();
+        if(!Const.SERVERPATH.exists()){
+            Const.SERVERPATH.mkdir();
+        }
         for(int i = 0;i<n;i++){
-            File f = new File("server/0"+(i+1)+ " " +names.remove(0) + "/");
+            File f = new File(Const.SERVERPATH.getName()+"0"+(i+1)+ " " +names.remove(0) + "/");
             if(!f.exists()){
                 f.mkdir();
             }
@@ -94,6 +102,50 @@ public class Utils {
         s = new String(arr, Charset.forName("UTF-8"));
         return s;
     }
+    public static void testMAC() {
+        try {
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+            keyGenerator.init(128);
+            SecretKey secretKey = keyGenerator.generateKey();
+            KeyGenerator keygen = KeyGenerator.getInstance("HmacMD5");
+            Key macKey = keygen.generateKey();
+            Mac mac = Mac.getInstance("HmacMD5");
+            mac.init(macKey);
+            //cifrario messaggio, AES o DES
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+
+            FileInputStream fis = new FileInputStream("prova.txt");
+            FileOutputStream os = new FileOutputStream("prova2.txt");
+
+            byte[] t = cipher.doFinal(fis.readAllBytes());
+            os.write(t);
+            os.close();
+            fis.close();
+            byte[] macBytes2 = mac.doFinal(t);
+            for (int p = 0; p < macBytes2.length; p++)
+                System.out.print(macBytes2[p]);
+
+
+            Cipher cipher2 = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher2.init(Cipher.DECRYPT_MODE, secretKey);
+            File file = new File("prova2.txt");
+            FileInputStream fis2 = new FileInputStream(file);
+
+            FileOutputStream w = new FileOutputStream("chiaro.txt");
+
+            System.out.println();
+            byte[] c0 = fis2.readAllBytes();
+            byte[] c = cipher2.doFinal(c0);
+            w.write(c);
+            byte[] macBytes3 = mac.doFinal(c0);
+            for (int p = 0; p < macBytes3.length; p++)
+                System.out.print(macBytes3[p]);
+            System.out.println("Ok");
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 
     public static void TestBiginteger() throws IOException {
         BigInteger bi = BigInteger.probablePrime(10, new Random());
@@ -106,5 +158,16 @@ public class Utils {
         BigInteger bi2 = new BigInteger(b);
         fis.close();
         System.out.println("ok");
+    }
+
+    public static File[] getServers() {
+        File[] servers = new File[Const.SERVERPATH.listFiles().length];
+
+        for(File dir : Const.SERVERPATH.listFiles()){
+            String s = dir.getName().substring(0,2);
+            int num = Integer.valueOf(s)-1;
+            servers[num] = dir;
+        }
+        return servers;
     }
 }

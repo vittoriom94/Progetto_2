@@ -6,13 +6,43 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class KeyRing implements Serializable {
-    private String name = "";
+    private String name;
     private HashMap<String, Byte[]> keys;
     public KeyRing(String nomefile){
         this.keys = new HashMap<>();
         this.name = nomefile;
     }
 
+
+    public byte[] getKey(String id){
+
+       return Utils.fromByteTobyte(keys.get(id));
+    }
+
+    public void saveKey(byte[] k, String id){
+        keys.put(id, Utils.frombyteToByte(k));
+    }
+
+
+    public void saveShamir(int k, int n){
+        SharesRing sr = SharesRing.getInstance();
+        SecretSharing ss = sr.getShamir();
+        HashMap<String, HashMap<BigInteger,BigInteger>>   sharesAndIds = new HashMap<>();
+
+        //aggiungi chiavi allo sharesring
+        for( Map.Entry<String,Byte[]> e : keys.entrySet()){
+            BigInteger secret = Utils.getBigInteger(Utils.fromByteTobyte(e.getValue()));
+            String id = name+Const.SEPARATORKR+e.getKey();
+
+            HashMap<BigInteger, BigInteger> shares = (HashMap<BigInteger, BigInteger>) ss.genShares(secret,k,n);
+
+            sharesAndIds.put( id, shares);
+        }
+        sr.saveSharesRing(Const.SHARESFILE, sharesAndIds);
+    }
+
+
+    @Deprecated
     public static KeyRing loadKeyring(File f){
         KeyRing kr = null;
         try {
@@ -33,39 +63,7 @@ public class KeyRing implements Serializable {
         return kr;
     }
 
-    public byte[] getKey(String id){
-
-       return Utils.fromByteTobyte(keys.get(id));
-    }
-
-    public void saveKey(byte[] k, String id){
-        keys.put(id, Utils.frombyteToByte(k));
-    }
-
-
-    public void saveShamir(int k, int n){
-        SharesRing sr = SharesRing.loadSharesRing(new File("sharesRing.txt"));
-        SecretSharing ss;
-        if(sr==null){
-            sr = new SharesRing();
-            ss = new SecretSharing(6000);
-        } else {
-            ss = new SecretSharing(sr.getP());
-        }
-
-        for( Map.Entry<String,Byte[]> e : keys.entrySet()){
-            BigInteger secret = Utils.getBigInteger(Utils.fromByteTobyte(e.getValue()));
-            String id = name+"-"+e.getKey();
-            // le chiavi vanno da 1 a n
-            HashMap<BigInteger, BigInteger> shares = (HashMap<BigInteger, BigInteger>) ss.genShares(secret,k,n);
-
-            sr.add( id, shares);
-        }
-        sr.saveSharesRing(new File("sharesRing.txt"), ss.getP());
-
-
-    }
-
+    @Deprecated
     public void saveKeyring(File f){
         try {
             FileOutputStream fos = new FileOutputStream(f);

@@ -36,10 +36,9 @@ public class GUI {
     private JPanel panelMain;
     private JButton decFileChooseButton;
     private JButton decodificaButton;
-    private JButton generaCoppiaRSAButton;
-    private JComboBox rsaSizeCreateKey;
     private JButton keyFileButton;
     private JButton keyFileDecodeButton;
+    private JButton generaPrimoButton;
 
     private File codificaFile = null;
     private File decodificaFile = null;
@@ -85,9 +84,6 @@ public class GUI {
 
         DSASelect.setMaximumRowCount(3);
         DSASelect.setModel(new DefaultComboBoxModel<>(new String[]{"SHA1withDSA", "SHA224withDSA", "SHA256withDSA"}));
-
-        rsaSizeCreateKey.setMaximumRowCount(2);
-        rsaSizeCreateKey.setModel(new DefaultComboBoxModel<>(new String[]{"1024", "2048"}));
 
         firmaRadio.addActionListener(new ActionListener() {
             @Override
@@ -188,30 +184,6 @@ public class GUI {
                 }
             }
         });
-        generaCoppiaRSAButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
-                fc.setSelectedFile(new File("chiavi.txt"));
-
-                int returnValue = fc.showSaveDialog(null);
-
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
-                    File destinationFile = fc.getSelectedFile();
-                    NewFile nf = new NewFile();
-
-                    try {
-                        nf.saveKeyPair((byte) rsaSizeCreateKey.getSelectedIndex(), "null");
-
-                    } catch (NoSuchAlgorithmException e1) {
-                        e1.printStackTrace();
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }
-
-                }
-            }
-        });
         keyFileButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -240,6 +212,14 @@ public class GUI {
                 if (returnValue == JFileChooser.APPROVE_OPTION) {
                     keyFileDecode = fc.getSelectedFile();
                 }
+            }
+        });
+        generaPrimoButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // genera primo
+                SharesRing.getInstance();
+
             }
         });
     }
@@ -329,6 +309,7 @@ public class GUI {
 
     public static void main(String args[]) throws IOException {
         Utils.createServers();
+
         //SharesRing.distribute();
         //System.out.println();
 
@@ -418,9 +399,9 @@ public class GUI {
      */
     private void $$$setupUI$$$() {
         panelMain = new JPanel();
-        panelMain.setLayout(new CardLayout(0, 0));
+        panelMain.setLayout(new BorderLayout(0, 0));
         tabbedPane1 = new JTabbedPane();
-        panelMain.add(tabbedPane1, "Card1");
+        panelMain.add(tabbedPane1, BorderLayout.CENTER);
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridBagLayout());
         tabbedPane1.addTab("Codifica", panel1);
@@ -665,35 +646,34 @@ public class GUI {
         panel2.add(keyFileDecodeButton, gbc);
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridBagLayout());
-        tabbedPane1.addTab("Chiave RSA", panel3);
-        generaCoppiaRSAButton = new JButton();
-        generaCoppiaRSAButton.setText("Genera coppia RSA");
+        tabbedPane1.addTab("Configurazione", panel3);
+        generaPrimoButton = new JButton();
+        generaPrimoButton.setText("Genera primo");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel3.add(generaCoppiaRSAButton, gbc);
+        panel3.add(generaPrimoButton, gbc);
         final JPanel spacer8 = new JPanel();
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 0;
-        gbc.weightx = 1.0;
+        gbc.weightx = 0.01;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel3.add(spacer8, gbc);
         final JPanel spacer9 = new JPanel();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 1;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.VERTICAL;
         panel3.add(spacer9, gbc);
-        rsaSizeCreateKey = new JComboBox();
-        gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel3.add(rsaSizeCreateKey, gbc);
+        final JPanel panel4 = new JPanel();
+        panel4.setLayout(new BorderLayout(0, 0));
+        panelMain.add(panel4, BorderLayout.SOUTH);
+        final JLabel label9 = new JLabel();
+        label9.setText("GUI Pronta");
+        panel4.add(label9, BorderLayout.CENTER);
     }
 
     /**
