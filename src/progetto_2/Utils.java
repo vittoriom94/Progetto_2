@@ -27,7 +27,7 @@ public class Utils {
             Const.SERVERPATH.mkdir();
         }
         for(int i = 0;i<n;i++){
-            File f = new File(Const.SERVERPATH.getName()+"0"+(i+1)+ " " +names.remove(0) + "/");
+            File f = new File(Const.SERVERPATH.getName()+"/0"+(i+1)+ " " +names.remove(0) + "/");
             if(!f.exists()){
                 f.mkdir();
             }

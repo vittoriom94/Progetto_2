@@ -23,7 +23,6 @@ public class KeyRing implements Serializable {
         keys.put(id, Utils.frombyteToByte(k));
     }
 
-
     public void saveShamir(int k, int n){
         SharesRing sr = SharesRing.getInstance();
         SecretSharing ss = sr.getShamir();
@@ -32,7 +31,7 @@ public class KeyRing implements Serializable {
         //aggiungi chiavi allo sharesring
         for( Map.Entry<String,Byte[]> e : keys.entrySet()){
             BigInteger secret = Utils.getBigInteger(Utils.fromByteTobyte(e.getValue()));
-            String id = name+Const.SEPARATORKR+e.getKey();
+            String id = name+Const.SEPARATORKR+e.getKey();//k???
 
             HashMap<BigInteger, BigInteger> shares = (HashMap<BigInteger, BigInteger>) ss.genShares(secret,k,n);
 

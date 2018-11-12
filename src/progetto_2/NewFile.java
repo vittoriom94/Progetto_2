@@ -286,8 +286,7 @@ public class NewFile {
 
     public boolean decodifica(File file, File destinazione) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
 
-        //kr = KeyRing.loadKeyring(new File(file.getPath().substring(0, file.getPath().length()-4) + "Keyring.txt"));
-        SharesRing sr = SharesRing.loadSharesRing(new File("sharesRing.txt"));
+        SharesRing sr = SharesRing.getInstance();
         kr = sr.rebuild(file.getName());
 
         FileInputStream fis = new FileInputStream(file);
