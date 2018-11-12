@@ -7,6 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
@@ -222,6 +224,24 @@ public class GUI {
 
             }
         });
+        mittenteText.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if(e.getKeyChar() == '#'){
+                    e.consume();
+                }
+                super.keyTyped(e);
+            }
+        });
+        destinatarioText.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if(e.getKeyChar() == '#'){
+                    e.consume();
+                }
+                super.keyTyped(e);
+            }
+        });
     }
 
     private void enableFirma() {
@@ -283,7 +303,7 @@ public class GUI {
         byte modi_operativi = (byte) modiSelect.getSelectedIndex();
 
         System.out.println(mittente + " " + destinatario + " " + cifrario_m);
-        NewFile f = new NewFile(mittente, destinatario, cifrario_m,
+        NewFile f = new NewFile(mittente.replace("#",""), destinatario.replace("#",""), cifrario_m,
                 cifrario_k_dim, padding, integrita, null, modi_operativi, null, type, dimFirma, null);
         try {
 
@@ -309,7 +329,6 @@ public class GUI {
 
     public static void main(String args[]) throws IOException {
         Utils.createServers();
-
         //SharesRing.distribute();
         //System.out.println();
 

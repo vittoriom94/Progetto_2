@@ -48,7 +48,8 @@ public class SharesRing implements Serializable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
-            Const.SHARESFILE.delete(); //Utils.deleteData();
+
+            Utils.deleteData();
             throw new RuntimeException("Il file sharesRing è corrotto.", e);
         }
 
@@ -109,19 +110,24 @@ public class SharesRing implements Serializable {
         for (String s : mapFiles.keySet()) {
             String name = s.split(Pattern.quote(Const.SEPARATORKR))[0];
             String key = s.split(Pattern.quote(Const.SEPARATORKR))[1];
+            int minshares = Integer.valueOf(s.split(Pattern.quote(Const.SEPARATORKR))[2]);
 
             SecretSharing sh = new SecretSharing(p);
 
             if (name.equalsIgnoreCase(nomefile)) {
                 HashMap<Integer, String> temp = mapFiles.get(s);
                 HashMap<BigInteger, BigInteger> shares = new HashMap<>();
-
+                int k=0;
                 for (Map.Entry e : temp.entrySet()) {
 
                     byte[] share = getShare((String) e.getValue(), servers[(Integer) e.getKey() - 1]);
                     if (share != null) {
                         shares.put(BigInteger.valueOf((int) e.getKey()), new BigInteger(share));
+                        k++;
                     }
+                }
+                if(k<minshares){
+                    throw new NotEnoughSharesException(key, minshares);
                 }
                 BigInteger secret = sh.getSecret(shares);
                 kr.saveKey(Utils.getbyteFromBigInteger(secret), key);

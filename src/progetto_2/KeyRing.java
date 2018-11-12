@@ -31,7 +31,7 @@ public class KeyRing implements Serializable {
         //aggiungi chiavi allo sharesring
         for( Map.Entry<String,Byte[]> e : keys.entrySet()){
             BigInteger secret = Utils.getBigInteger(Utils.fromByteTobyte(e.getValue()));
-            String id = name+Const.SEPARATORKR+e.getKey();//k???
+            String id = name+Const.SEPARATORKR+e.getKey()+Const.SEPARATORKR+k;//k???
 
             HashMap<BigInteger, BigInteger> shares = (HashMap<BigInteger, BigInteger>) ss.genShares(secret,k,n);
 
