@@ -7,6 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
@@ -39,6 +41,9 @@ public class GUI {
     private JButton keyFileButton;
     private JButton keyFileDecodeButton;
     private JButton generaPrimoButton;
+    private JButton generaRSAButton;
+    private JComboBox sharesBox;
+    private JComboBox sharesMinBox;
 
     private File codificaFile = null;
     private File decodificaFile = null;
@@ -84,6 +89,14 @@ public class GUI {
 
         DSASelect.setMaximumRowCount(3);
         DSASelect.setModel(new DefaultComboBoxModel<>(new String[]{"SHA1withDSA", "SHA224withDSA", "SHA256withDSA"}));
+
+        sharesBox.setMaximumRowCount(7);
+        sharesBox.setModel(new DefaultComboBoxModel<>(new String[]{"1", "2", "3", "4", "5", "6", "7", "8",}));
+        sharesBox.setSelectedIndex(4);
+
+        sharesMinBox.setMaximumRowCount(7);
+        sharesMinBox.setModel(new DefaultComboBoxModel<>(new String[]{"1", "2", "3", "4", "5", "6", "7", "8",}));
+        sharesMinBox.setSelectedIndex(2);
 
         firmaRadio.addActionListener(new ActionListener() {
             @Override
@@ -222,6 +235,65 @@ public class GUI {
 
             }
         });
+        generaRSAButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //genera rsa
+
+                KeyRing kr = new KeyRing(Const.ANYMESSAGEID);
+                KeyPairGenerator gen = null;
+                try {
+                    gen = KeyPairGenerator.getInstance("RSA");
+                } catch (NoSuchAlgorithmException e1) {
+                    throw new RuntimeException(e1);
+                }
+
+                gen.initialize(Match.dimensione.get((byte) dimRSASelect.getSelectedIndex()));
+                KeyPair k = gen.generateKeyPair();
+                Key publickey = k.getPublic();
+                Key privatekey = k.getPrivate();
+
+
+                kr.saveKey(publickey.getEncoded(), "RSA" + "Public");
+                kr.saveKey(privatekey.getEncoded(), "RSA" + "Private");
+
+                kr.saveShamir(sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
+
+            }
+        });
+        sharesBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                int n = sharesBox.getSelectedIndex();
+                String[] s = new String[n + 1];
+                for (int i = 0; i <= n; i++) {
+                    s[i] = "" + (i + 1);
+                }
+                sharesMinBox.setMaximumRowCount(n + 1);
+                sharesMinBox.setModel(new DefaultComboBoxModel<>(s));
+                sharesMinBox.setSelectedIndex(n);
+
+            }
+        });
+        mittenteText.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (e.getKeyChar() == '#') {
+                    e.consume();
+                }
+                super.keyTyped(e);
+            }
+        });
+        destinatarioText.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (e.getKeyChar() == '#') {
+                    e.consume();
+                }
+                super.keyTyped(e);
+            }
+        });
     }
 
     private void enableFirma() {
@@ -283,7 +355,7 @@ public class GUI {
         byte modi_operativi = (byte) modiSelect.getSelectedIndex();
 
         System.out.println(mittente + " " + destinatario + " " + cifrario_m);
-        NewFile f = new NewFile(mittente, destinatario, cifrario_m,
+        NewFile f = new NewFile(mittente.replace("#", ""), destinatario.replace("#", ""), cifrario_m,
                 cifrario_k_dim, padding, integrita, null, modi_operativi, null, type, dimFirma, null);
         try {
 
@@ -592,20 +664,6 @@ public class GUI {
         gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.WEST;
         panel1.add(label7, gbc);
-        final JLabel label8 = new JLabel();
-        label8.setText("Dimensione RSA");
-        gbc = new GridBagConstraints();
-        gbc.gridx = 2;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
-        panel1.add(label8, gbc);
-        dimRSASelect = new JComboBox();
-        gbc = new GridBagConstraints();
-        gbc.gridx = 2;
-        gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel1.add(dimRSASelect, gbc);
         final JPanel panel2 = new JPanel();
         panel2.setLayout(new GridBagLayout());
         tabbedPane1.addTab("Decodifica", panel2);
@@ -664,16 +722,65 @@ public class GUI {
         final JPanel spacer9 = new JPanel();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridy = 8;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.VERTICAL;
         panel3.add(spacer9, gbc);
+        dimRSASelect = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel3.add(dimRSASelect, gbc);
+        final JLabel label8 = new JLabel();
+        label8.setText("Dimensione RSA");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel3.add(label8, gbc);
+        generaRSAButton = new JButton();
+        generaRSAButton.setText("Genera RSA");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel3.add(generaRSAButton, gbc);
+        final JLabel label9 = new JLabel();
+        label9.setText("Numero di share");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel3.add(label9, gbc);
+        final JLabel label10 = new JLabel();
+        label10.setText("Numero di share minime");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel3.add(label10, gbc);
+        sharesBox = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel3.add(sharesBox, gbc);
+        sharesMinBox = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel3.add(sharesMinBox, gbc);
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new BorderLayout(0, 0));
         panelMain.add(panel4, BorderLayout.SOUTH);
-        final JLabel label9 = new JLabel();
-        label9.setText("GUI Pronta");
-        panel4.add(label9, BorderLayout.CENTER);
+        final JLabel label11 = new JLabel();
+        label11.setText("GUI Pronta");
+        panel4.add(label11, BorderLayout.CENTER);
     }
 
     /**

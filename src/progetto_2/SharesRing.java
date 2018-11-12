@@ -2,21 +2,22 @@ package progetto_2;
 
 import java.io.*;
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class SharesRing implements Serializable {
     private BigInteger p;
-    //string chiave: nomefile|tipochiave|k???
+    //string chiave: nomefile   tipochiave|k???
     //lista identificativi?
-    private HashMap<String, HashMap<Integer, String>> mapFiles = new HashMap<>();
+    private HashMap<String, HashMap<String, HashMap<Integer, ShareEntry>>> mapFiles = new HashMap<>();
     private transient static SharesRing instance = null;
+    private transient File[] servers;
+    private transient SecretSharing sh;
 
     protected SharesRing() {
         this.p = SecretSharing.generatePrime(Const.BITLENGHT);
+
+
     }
 
     public static SharesRing getInstance() {
@@ -24,7 +25,10 @@ public class SharesRing implements Serializable {
         if (instance == null) {
             SharesRing sr = SharesRing.loadSharesRing();
             instance = Objects.requireNonNullElseGet(sr, SharesRing::new);
+            instance.saveInstance();
         }
+        instance.sh = new SecretSharing(instance.p);
+        instance.servers = Utils.getServers();
         return instance;
     }
 
@@ -55,15 +59,14 @@ public class SharesRing implements Serializable {
         return sr;
     }
 
-    public void saveSharesRing(File f, HashMap<String, HashMap<BigInteger, BigInteger>> map) {
-
-        File[] servers = Utils.getServers();
+    public void saveSharesRing(String name, HashMap<String, HashMap<BigInteger, BigInteger>> map) {
 
         try {
 
             //salva la share
+            HashMap<String, HashMap<Integer, ShareEntry>> temp0 = new HashMap<>();
             for (String s : map.keySet()) {
-                HashMap<Integer, String> temp = new HashMap<>();
+                HashMap<Integer, ShareEntry> temp1 = new HashMap<>();
                 for (BigInteger bi : map.get(s).keySet()) {
                     File tempfile;
                     String nomeShare;
@@ -71,63 +74,93 @@ public class SharesRing implements Serializable {
 
                         nomeShare = UUID.randomUUID().toString();
                         tempfile = new File(servers[bi.intValue() - 1].getAbsolutePath() + "/" + nomeShare + ".share");
-                    } while (f.exists());
+                    } while (tempfile.exists());
                     tempfile.createNewFile();
                     FileOutputStream fos = new FileOutputStream(tempfile);
                     //fos.write(Utils.getbyteFromBigInteger(map.get(s).get(bi)));
                     fos.write(map.get(s).get(bi).toByteArray());
+
                     fos.flush();
                     fos.close();
 
                     //salva nella hashmap da scrivere
-                    temp.put(bi.intValue(), nomeShare);
+                    temp1.put(bi.intValue(), new ShareEntry(nomeShare, map.get(s).get(bi).hashCode()));
                 }
-                mapFiles.put(s, temp);
+                temp0.put(s, temp1);
             }
+            mapFiles.put(name, temp0);
+
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+        saveInstance();
+
+
+    }
+
+    private void saveInstance() {
         try {
-            FileOutputStream fos = new FileOutputStream(f);
+            FileOutputStream fos = new FileOutputStream(Const.SHARESFILE);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
 
             oos.writeObject(this);
 
             oos.close();
             fos.close();
-        }  catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public KeyRing rebuild(String nomefile) {
 
-        File[] servers = Utils.getServers();
+
+
         KeyRing kr = new KeyRing(nomefile);
-        for (String s : mapFiles.keySet()) {
-            String name = s.split(Pattern.quote(Const.SEPARATORKR))[0];
-            String key = s.split(Pattern.quote(Const.SEPARATORKR))[1];
 
-            SecretSharing sh = new SecretSharing(p);
 
-            if (name.equalsIgnoreCase(nomefile)) {
-                HashMap<Integer, String> temp = mapFiles.get(s);
-                HashMap<BigInteger, BigInteger> shares = new HashMap<>();
+        for (String s : mapFiles.get(nomefile).keySet()) {
+            String key = s.split(Pattern.quote(Const.SEPARATORKR))[0];
+            int minshares = Integer.valueOf(s.split(Pattern.quote(Const.SEPARATORKR))[1]);
+            kr.saveKey(searchShares(nomefile, key,minshares), key);
 
-                for (Map.Entry e : temp.entrySet()) {
+        }
+        for (String s : mapFiles.get(Const.ANYMESSAGEID).keySet()) {
+            String key = s.split(Pattern.quote(Const.SEPARATORKR))[0];
+            int minshares = Integer.valueOf(s.split(Pattern.quote(Const.SEPARATORKR))[1]);
+            kr.saveKey(searchShares(Const.ANYMESSAGEID, key,minshares), key);
 
-                    byte[] share = getShare((String) e.getValue(), servers[(Integer) e.getKey() - 1]);
-                    if (share != null) {
-                        shares.put(BigInteger.valueOf((int) e.getKey()), new BigInteger(share));
-                    }
+        }
+
+        return kr;
+    }
+
+    //nome file, nome chiave
+    private byte[] searchShares(String name, String key, int minshares) {
+        int k = 0;
+        HashMap<Integer, ShareEntry> temp = mapFiles.get(name).get(key+Const.SEPARATORKR+minshares);
+        HashMap<BigInteger, BigInteger> shares = new HashMap<>();
+
+
+        for (Map.Entry e : temp.entrySet()) {
+
+            byte[] share = getShare(((ShareEntry) e.getValue()).getFile(), servers[(Integer) e.getKey() - 1]);
+
+            if (share != null) {
+                BigInteger shareValue = new BigInteger(share);
+                boolean checkHash = shareValue.hashCode() == ((ShareEntry) e.getValue()).getHash();
+                if (checkHash) {
+                    shares.put(BigInteger.valueOf((int) e.getKey()), shareValue);
+                    k++;
                 }
-                BigInteger secret = sh.getSecret(shares);
-                kr.saveKey(Utils.getbyteFromBigInteger(secret), key);
             }
         }
-        return kr;
+        if(k<minshares){
+            throw new NotEnoughSharesException(key, minshares);
+        }
+        BigInteger secret = sh.getSecret(shares);
+        return Utils.getbyteFromBigInteger(secret);
     }
 
     private byte[] getShare(String name, File server) {
@@ -144,5 +177,20 @@ public class SharesRing implements Serializable {
         }
         return null;
 
+    }
+
+    public HashMap<String, Byte[]> checkGenericKeys() {
+        HashMap<String, Byte[]> keys = new HashMap<>();
+        HashMap<String, HashMap<Integer, ShareEntry>> genericKeys = mapFiles.get(Const.ANYMESSAGEID);
+        if(genericKeys == null){
+            return new HashMap<String, Byte[]>();
+        }
+        for (String s : genericKeys.keySet()) {
+            String key = s.split(Pattern.quote(Const.SEPARATORKR))[0];
+            int minshares = Integer.valueOf(s.split(Pattern.quote(Const.SEPARATORKR))[1]);
+            keys.put(key ,Utils.frombyteToByte(searchShares(Const.ANYMESSAGEID, key,minshares)));
+
+        }
+        return keys;
     }
 }

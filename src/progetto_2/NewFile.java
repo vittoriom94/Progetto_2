@@ -60,20 +60,6 @@ public class NewFile {
 
         kr.saveKey(publickey.getEncoded(), type+"Public");
         kr.saveKey(privatekey.getEncoded(),type+"Private");
-        //System.out.println(publickey.getFormat() + " " + privatekey.getFormat() + " " + publickey.getEncoded().length + " " + privatekey.getEncoded().length + " " + Match.dimensione.get(size));
-        /*FileOutputStream fos = new FileOutputStream(file);
-
-        fos.write(publickey.getEncoded());
-
-        fos.flush();
-        fos.close();
-        //System.out.println(file.getName() + " " + file.getParent() + " " + file.getPath());
-        fos = new FileOutputStream(file.getPath().substring(0, file.getPath().length()-4) + "Private.txt");
-        fos.write(size);
-        fos.write(privatekey.getEncoded());
-        fos.flush();
-        fos.close();
-        */
     }
 
 
@@ -201,7 +187,7 @@ public class NewFile {
             */
 
             //genera chiave pubblica e privata
-            saveKeyPair( cifrario_k,"RSA");
+            //saveKeyPair( cifrario_k,"RSA");
             
 
             //cifra la chiave

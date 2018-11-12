@@ -7,4 +7,5 @@ public class Const {
     public final static File SERVERPATH = new File("server/");
     public final static int BITLENGHT = 6000;
     public final static String SEPARATORKR = "|";
+    public final static String ANYMESSAGEID = "Free";
 }

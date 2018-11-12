@@ -9,8 +9,9 @@ public class KeyRing implements Serializable {
     private String name;
     private HashMap<String, Byte[]> keys;
     public KeyRing(String nomefile){
-        this.keys = new HashMap<>();
+        this.keys = SharesRing.getInstance().checkGenericKeys();
         this.name = nomefile;
+
     }
 
 
@@ -31,13 +32,13 @@ public class KeyRing implements Serializable {
         //aggiungi chiavi allo sharesring
         for( Map.Entry<String,Byte[]> e : keys.entrySet()){
             BigInteger secret = Utils.getBigInteger(Utils.fromByteTobyte(e.getValue()));
-            String id = name+Const.SEPARATORKR+e.getKey();//k???
+            String id = e.getKey()+ Const.SEPARATORKR+k;//k???
 
             HashMap<BigInteger, BigInteger> shares = (HashMap<BigInteger, BigInteger>) ss.genShares(secret,k,n);
 
             sharesAndIds.put( id, shares);
         }
-        sr.saveSharesRing(Const.SHARESFILE, sharesAndIds);
+        sr.saveSharesRing(name, sharesAndIds);
     }
 
 
