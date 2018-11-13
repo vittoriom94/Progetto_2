@@ -193,4 +193,9 @@ public class SharesRing implements Serializable {
         }
         return keys;
     }
+
+    public void clear() {
+        this.mapFiles = new HashMap<>();
+        saveInstance();
+    }
 }

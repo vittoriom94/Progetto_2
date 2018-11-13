@@ -19,7 +19,7 @@ public class Match {
 			Map.entry((byte)0x01, "SHA-224"),
 			Map.entry((byte)0x02, "SHA-256"),
 			Map.entry((byte)0x03, "SHA-384"),
-			Map.entry((byte)0x04, "SHA-512"),
+			Map.entry((byte)0x04, "SHA-512/256"),
 			Map.entry((byte)0x05, "HmacMD5"),
 			Map.entry((byte)0x06, "HmacSHA256"),
 			Map.entry((byte)0x07, "HmacSHA384"),

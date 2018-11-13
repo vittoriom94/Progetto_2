@@ -174,6 +174,10 @@ public class Utils {
     }
 
     public static void deleteData() {
+
+        SharesRing.getInstance().clear();
+
+
         Path directory = Paths.get("server/");
         try {
             Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {

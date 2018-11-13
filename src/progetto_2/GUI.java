@@ -375,6 +375,8 @@ public class GUI {
             e.printStackTrace();
         } catch (InvalidAlgorithmParameterException e) {
             e.printStackTrace();
+        } catch (SignatureException e) {
+            e.printStackTrace();
         }
     }
 
