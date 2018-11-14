@@ -37,8 +37,6 @@ public class GUI {
     private JPanel panelMain;
     private JButton decFileChooseButton;
     private JButton decodificaButton;
-    private JButton keyFileButton;
-    private JButton keyFileDecodeButton;
     private JButton generaPrimoButton;
     private JButton generaRSAButton;
     private JComboBox sharesBox;
@@ -49,8 +47,6 @@ public class GUI {
     private File codificaFile = null;
     private File decodificaFile = null;
 
-    private File keyFileEncode = null;
-    private File keyFileDecode = null;
 
     public GUI() {
 
@@ -252,7 +248,7 @@ public class GUI {
         dimDSASelect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(dimDSASelect.getSelectedIndex()==1) {
+                if (dimDSASelect.getSelectedIndex() == 1) {
                     DSASelect.setMaximumRowCount(3);
                     DSASelect.setModel(new DefaultComboBoxModel<>(new String[]{"SHA224withDSA", "SHA256withDSA"}));
                 } else {
@@ -313,7 +309,7 @@ public class GUI {
         byte dimFirma = 0x08;
         if (firmaRadio.isSelected()) {
             integrita = 0x00;
-            type = (byte) (DSASelect.getSelectedIndex() + 8+dimDSASelect.getSelectedIndex());
+            type = (byte) (DSASelect.getSelectedIndex() + 8 + dimDSASelect.getSelectedIndex());
             dimFirma = (byte) dimDSASelect.getSelectedIndex();
 
         } else if (MACRadio.isSelected()) {
@@ -578,13 +574,6 @@ public class GUI {
         gbc.gridy = 3;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel1.add(codificaButton, gbc);
-        keyFileButton = new JButton();
-        keyFileButton.setText("File chiavi");
-        gbc = new GridBagConstraints();
-        gbc.gridx = 10;
-        gbc.gridy = 2;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel1.add(keyFileButton, gbc);
         paddingRSASelect = new JComboBox();
         gbc = new GridBagConstraints();
         gbc.gridx = 2;
@@ -613,7 +602,7 @@ public class GUI {
         decodificaButton.setText("Decodifica");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel2.add(decodificaButton, gbc);
         final JPanel spacer6 = new JPanel();
@@ -630,13 +619,13 @@ public class GUI {
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.VERTICAL;
         panel2.add(spacer7, gbc);
-        keyFileDecodeButton = new JButton();
-        keyFileDecodeButton.setText("File chiavi");
+        list1 = new JList();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel2.add(keyFileDecodeButton, gbc);
+        gbc.gridy = 2;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        panel2.add(list1, gbc);
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridBagLayout());
         tabbedPane1.addTab("Configurazione", panel3);
@@ -657,7 +646,7 @@ public class GUI {
         final JPanel spacer9 = new JPanel();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 8;
+        gbc.gridy = 9;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.VERTICAL;
         panel3.add(spacer9, gbc);
@@ -710,6 +699,13 @@ public class GUI {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel3.add(sharesMinBox, gbc);
+        pulisciKeyringButton = new JButton();
+        pulisciKeyringButton.setText("Pulisci Keyring");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 8;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel3.add(pulisciKeyringButton, gbc);
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new BorderLayout(0, 0));
         panelMain.add(panel4, BorderLayout.SOUTH);
