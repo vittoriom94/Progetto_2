@@ -24,7 +24,8 @@ public class NewFile {
     private byte[] salt;//8 byte
     private byte modo_operativo;//00 ECB ; 01 CBC ; 02 CFB
     private byte[] iv;//8 byte des/triple des;16 aes
-    private byte tipo;//00 SHA1 ; 01 SHA224 ; 02 ; SHA256 ; 03 SHA384 ; 04 SHA512
+    private byte tipo;
+    //00 SHA1 ; 01 SHA224 ; 02 ; SHA256 ; 03 SHA384 ; 04 SHA512
     //05 MD5 ; 06 SHA256 ; 07 SHA384
     //08 SHA1; 09 SHA224; 10 SHA256
     private byte dimensione_firma;//00 1024 ; 01 2048;
@@ -33,8 +34,7 @@ public class NewFile {
     private KeyRing kr;
 
     public NewFile(String mittente, String destinatario, byte cifrario_m, byte cifrario_k, byte padding, byte integrita,
-                   byte[] salt, byte modi_operativi, byte[] iv, byte tipo, byte dimensione_firma, byte[] messaggio) {
-        super();
+                   byte modi_operativi, byte tipo, byte dimensione_firma) {
         this.mittente = mittente;
         this.destinatario = destinatario;
         this.cifrario_m = cifrario_m;
@@ -44,48 +44,20 @@ public class NewFile {
         this.modo_operativo = modi_operativi;
         this.tipo = tipo;
         this.dimensione_firma = dimensione_firma;
-        this.messaggio = messaggio;
     }
 
     public NewFile() {
     }
 
-    public void saveKeyPair(byte size, String type) throws NoSuchAlgorithmException, IOException {
-        KeyPairGenerator gen = KeyPairGenerator.getInstance(type);
-
-        gen.initialize(Match.dimensione.get(size));
-        KeyPair k = gen.generateKeyPair();
-        Key publickey = k.getPublic();
-        Key privatekey = k.getPrivate();
-
-        kr.saveKey(publickey.getEncoded(), type + "Public");
-        kr.saveKey(privatekey.getEncoded(), type + "Private");
-        //System.out.println(publickey.getFormat() + " " + privatekey.getFormat() + " " + publickey.getEncoded().length + " " + privatekey.getEncoded().length + " " + Match.dimensione.get(size));
-        /*FileOutputStream fos = new FileOutputStream(file);
-
-        fos.write(publickey.getEncoded());
-
-        fos.flush();
-        fos.close();
-        //System.out.println(file.getName() + " " + file.getParent() + " " + file.getPath());
-        fos = new FileOutputStream(file.getPath().substring(0, file.getPath().length()-4) + "Private.txt");
-        fos.write(size);
-        fos.write(privatekey.getEncoded());
-        fos.flush();
-        fos.close();
-        */
-    }
-
-
-
     //aggiungere key publickey nel metodo
-    public boolean codifica(File file, File destinazione) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException, InvalidAlgorithmParameterException, SignatureException {
+    public boolean codifica(File file, File destinazione,int kShare, int nShare) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException, InvalidAlgorithmParameterException, SignatureException {
         try {
-            int tot = 0;
+
+            //genera Keyring
             kr = new KeyRing(destinazione.getName());
             FileOutputStream os = new FileOutputStream(destinazione);
 
-            //chiave messaggio
+            //Genera chiave segreta per il messaggio
             KeyGenerator keyGenerator = KeyGenerator.getInstance(Match.cifrario_m.get(this.cifrario_m));
             //aes 128, des 56, triple des 112
             int keySize;
@@ -102,30 +74,24 @@ public class NewFile {
             //cifrario messaggio, AES o DES
             Cipher cipher = Cipher.getInstance(Match.cifrario_m.get(this.cifrario_m) + "/" + Match.modi_operativi.get(this.modo_operativo) + "/PKCS5Padding");
 
-            //iv e salt
+            //header messaggio cifrato, generazione iv e salt
             SecureRandom random = new SecureRandom();
-            salt = new byte[8];
-            random.nextBytes(salt);
-            byte sl = (byte) '.';
+
+            byte sl = (byte) Const.MESSAGESEPARATOR.charAt(0);
             ArrayList<Byte> bytes = new ArrayList<Byte>();
             bytes.addAll(Utils.toByteArrayNonprimitive(mittente.getBytes("UTF-8")));
             bytes.add(sl);
             bytes.addAll(Utils.toByteArrayNonprimitive(destinatario.getBytes("UTF-8")));
             bytes.add(sl);
             bytes.add(cifrario_m);
-            bytes.add(sl);
             bytes.add(cifrario_k);
-            bytes.add(sl);
             bytes.add(padding);
-            bytes.add(sl);
             bytes.add(integrita);
-            bytes.add(sl);
             bytes.add(modo_operativo);
-            bytes.add(sl);
             bytes.add(tipo);
-            bytes.add(sl);
             bytes.add(dimensione_firma);
-            bytes.add(sl);
+            salt = new byte[8];
+            random.nextBytes(salt);
             bytes.addAll(Utils.toByteArrayNonprimitive(salt));
             int n = this.cifrario_m == (byte) 0x00 ? 16 : 8;
             iv = new byte[n];
@@ -138,11 +104,9 @@ public class NewFile {
             bytes.addAll(Utils.toByteArrayNonprimitive(iv));
 
             os.write(Utils.toByteArray(bytes));
-            tot = bytes.size();
-            int i = 0;
+            int tot = bytes.size();
 
             //cifrario RSA
-            //Cipher cipherkey = Cipher.getInstance("RSA/" + Match.modi_operativi.get(this.modo_operativo) + "/" + Match.padding.get(this.padding) + "Padding");
             Cipher cipherkey = Cipher.getInstance("RSA/ECB/" + Match.padding.get(this.padding) + "Padding");
 
             //cifra la chiave
@@ -171,8 +135,7 @@ public class NewFile {
             int block = 8;
             if(integrita == 0) {
                 Signature signature = Signature.getInstance (Match.tipo.get(this.tipo));
-                //Signature signature = Signature.getInstance ("SHA224withDSA");
-                saveKeyPair( dimensione_firma,"DSA");
+                NewFile.createKeyPair(dimensione_firma, "DSA",this.kr);
 
 
                 PKCS8EncodedKeySpec ks2 = new PKCS8EncodedKeySpec(kr.getKey("DSAPrivate"));
@@ -296,20 +259,21 @@ public class NewFile {
                 file1.close();
             }
             if (integrita == 2) {
-                if (Match.tipo.get(this.tipo) == "Sha-1")
+                //controllare traccia
+                if (Match.tipo.get(this.tipo) == "SHA-1")
                     lunghezza = 20;
-                if (Match.tipo.get(this.tipo) == "Sha-224")
+                if (Match.tipo.get(this.tipo) == "SHA-224")
                     lunghezza = 28;
-                if (Match.tipo.get(this.tipo) == "Sha-256")
+                if (Match.tipo.get(this.tipo) == "SHA-256")
                     lunghezza = 32;
-                if (Match.tipo.get(this.tipo) == "Sha-384")
+                if (Match.tipo.get(this.tipo) == "SHA-384")
                     lunghezza = 48;
-                if (Match.tipo.get(this.tipo) == "Sha-512/256")
-                    lunghezza = 32;
+                if (Match.tipo.get(this.tipo) == "SHA-512")
+                    lunghezza = 64;
                 byte[] b = new byte[lunghezza];
                 os.write(b);
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-
+                MessageDigest digest = MessageDigest.getInstance(Match.tipo.get(this.tipo));
+                digest.update(salt);
                 FileInputStream f = new FileInputStream(file);
                 while (block == 8) {
                     block = f.readNBytes(buffer, 0, block);
@@ -348,7 +312,7 @@ public class NewFile {
 
 
             }
-            kr.saveShamir(3, 5);
+            kr.saveShamir(kShare, nShare);
             return true;
         } catch (IOException e) {
             System.out.println("Errore: " + e);
@@ -366,31 +330,33 @@ public class NewFile {
         FileInputStream fis = new FileInputStream(file);
 
 
-        byte sl = (byte) '.';
-        ArrayList<byte[]> params = new ArrayList<byte[]>();
-        int num = 9;
+        byte sl = (byte) Const.MESSAGESEPARATOR.charAt(0);
+        ArrayList<byte[]> params = new ArrayList<>();
+        int num = 2;
         int i = 0;
-        ArrayList<Byte> ba = new ArrayList<Byte>();
+        ArrayList<Byte> ba = new ArrayList<>();
         while (i < num) {
             byte b = (byte) fis.read();
-            ba.add(b);
+
             if (b == sl) {
                 params.add(Utils.toByteArray(ba));
                 i++;
                 ba.clear();
+            } else {
+                ba.add(b);
             }
         }
         //this.mittente = Utils.byteArrayToString(params.get(0));
         //this.destinatario = Utils.byteArrayToString(params.get(1));
         this.mittente = new String(params.get(0), "UTF-8");
         this.destinatario = new String(params.get(1), "UTF-8");
-        this.cifrario_m = params.get(2)[0];
-        this.cifrario_k = params.get(3)[0];
-        this.padding = params.get(4)[0];
-        this.integrita = params.get(5)[0];
-        this.modo_operativo = params.get(6)[0];
-        this.tipo = params.get(7)[0];
-        this.dimensione_firma = params.get(8)[0];
+        this.cifrario_m = (byte) fis.read();
+        this.cifrario_k = (byte) fis.read();
+        this.padding = (byte) fis.read();
+        this.integrita = (byte) fis.read();
+        this.modo_operativo = (byte) fis.read();
+        this.tipo = (byte) fis.read();
+        this.dimensione_firma = (byte) fis.read();
 
         this.salt = fis.readNBytes(8);
         if (this.cifrario_m == (byte) 0x00) {
@@ -400,19 +366,10 @@ public class NewFile {
             System.out.println("there");
             this.iv = fis.readNBytes(8);
         }
-        //trova lunghezza rsa
-        //FileInputStream fisKey = new FileInputStream(keyFile);
-
-        //int rsaKeySize = (fisKey.read() +1)*128;
-        //System.out.println("key size: " + rsaKeySize);
-        //byte[] secretKey = fis.readNBytes(rsaKeySize);
         byte[] secretKey = kr.getKey("Secret");
 
 
         //decodifica chiave tramite RSA e privateRSAKey;
-
-        //byte[] privateKeyBytes = fisKey.readAllBytes();
-        //fisKey.close();
 
         PKCS8EncodedKeySpec ks = new PKCS8EncodedKeySpec(kr.getKey("RSAPrivate"));
         KeyFactory kf = KeyFactory.getInstance("RSA");
@@ -523,6 +480,51 @@ public class NewFile {
             System.out.print("\ndecodifica\n");
             for(int p=0;p<macBytes2.length;p++)
                 System.out.print(macBytes2[p]);
+            fos.flush();
+            fos.close();
+            fis.close();
+        }
+        if(integrita == 2){
+
+            byte[] hash=null;
+            if (Match.tipo.get(this.tipo) == "SHA-1")
+                hash = fis.readNBytes(20);
+            if (Match.tipo.get(this.tipo) == "SHA-224")
+                hash = fis.readNBytes(28);
+            if (Match.tipo.get(this.tipo) == "SHA-256")
+                hash = fis.readNBytes(32);
+            if (Match.tipo.get(this.tipo) == "SHA-384")
+                hash = fis.readNBytes(48);
+            if (Match.tipo.get(this.tipo) == "SHA-512")
+                hash = fis.readNBytes(64);
+            System.out.println("Hash");
+            for(int ll=0;ll<hash.length;ll++)
+                System.out.print(hash[ll]);
+            FileOutputStream fos = new FileOutputStream(destinazione);
+
+            MessageDigest digest = MessageDigest.getInstance(Match.tipo.get(this.tipo));
+            digest.update(salt);
+            int block = 8;
+            block=fis.read(buffer);
+
+            while(block == 8) {
+                byte[] c = cipher.update(buffer);
+                for(int p=0;p<c.length;p++)
+                    System.out.print(c[p]);
+                fos.write(c);
+                digest.update(c);
+                block=fis.readNBytes(buffer,0,block);
+            }
+            byte[] o = cipher.doFinal();
+            fos.write(o);
+            System.out.println();
+            for(int p=0;p<o.length;p++)
+                System.out.println(o[p]);
+            digest.update(o);
+            byte[] hashBytes = digest.digest();
+            System.out.print("\nhashDec\n");
+            for(int p=0;p<hashBytes.length;p++)
+                System.out.print(hashBytes[p]);
             fos.flush();
             fos.close();
             fis.close();

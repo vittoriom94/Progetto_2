@@ -323,11 +323,11 @@ public class GUI {
 
         System.out.println(mittente + " " + destinatario + " " + cifrario_m);
         NewFile f = new NewFile(mittente.replace(Const.MESSAGESEPARATOR, ""), destinatario.replace(Const.MESSAGESEPARATOR, ""), cifrario_m,
-                cifrario_k_dim, padding, integrita, null, modi_operativi, null, type, dimFirma, null);
+                cifrario_k_dim, padding, integrita, modi_operativi, type, dimFirma);
         try {
 
 
-            f.codifica(codificaFile, destinationFile);
+            f.codifica(codificaFile, destinationFile, sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         } catch (NoSuchPaddingException ex) {

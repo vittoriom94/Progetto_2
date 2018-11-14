@@ -11,12 +11,10 @@ public class KeyRing implements Serializable {
     public KeyRing(String nomefile){
         this.keys = SharesRing.getInstance().checkGenericKeys();
         this.name = nomefile;
-
     }
 
 
     public byte[] getKey(String id){
-
        return Utils.fromByteTobyte(keys.get(id));
     }
 
@@ -40,45 +38,4 @@ public class KeyRing implements Serializable {
         }
         sr.saveSharesRing(name, sharesAndIds);
     }
-
-
-    @Deprecated
-    public static KeyRing loadKeyring(File f){
-        KeyRing kr = null;
-        try {
-            FileInputStream fis = new FileInputStream(f);
-            ObjectInputStream ois = new ObjectInputStream(fis);
-
-            kr = (KeyRing) ois.readObject();
-            ois.close();
-            fis.close();
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return kr;
-    }
-
-    @Deprecated
-    public void saveKeyring(File f){
-        try {
-            FileOutputStream fos = new FileOutputStream(f);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-
-            oos.writeObject(this);
-
-            oos.close();
-            fos.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
 }
