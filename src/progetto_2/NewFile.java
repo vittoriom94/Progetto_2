@@ -77,58 +77,13 @@ public class NewFile {
     }
 
 
-    // chiamato dalla soluzione 2
-    private static void doCopy(InputStream is, OutputStream os)
-            throws IOException {
-        try (is; os) {
-            byte[] bytes = new byte[4096];
-            int numBytes;
-            while ((numBytes = is.read(bytes)) != -1) {
-                os.write(bytes, 0, numBytes);
-            }
-        }
-    }
-
 
     //aggiungere key publickey nel metodo
     public boolean codifica(File file, File destinazione) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException, InvalidAlgorithmParameterException, SignatureException {
         try {
             int tot = 0;
             kr = new KeyRing(destinazione.getName());
-
-            /*
-		  	//Soluzione 1
-		  	  int BUFFER = 8;
-			  FileInputStream fis = new FileInputStream(file);
-			  byte[] buffer = new byte[BUFFER]; //array contentente i byte letti a ogni iterazione
-			  int read = 0; //ignorare
-			  while ((read = fis.read(buffer)) > 0) {
-			  	  //effettua update
-				  String s = "";
-				  for (byte b : buffer) {
-					  s = s + (char) b;
-				  }
-				  System.out.println(s);
-			  }
-			  //qui dovrebbe esserci il dofinal??
-			  fis.close();
-				//-----------------------
-
-
-			  //Soluzione 2
-			  FileOutputStream os = new FileOutputStream("file2.txt");
-			  KeyGenerator keyGenerator = KeyGenerator.getInstance(Match.cifrario_m.get(this.cifrario_m));
-			  SecretKey secretKey = keyGenerator.generateKey();
-			  Cipher cipher2 = Cipher.getInstance(Match.cifrario_m.get(this.cifrario_m)+"/"+Match.modi_operativi.get(this.modo_operativo)+"/PKCS5Padding");
-			  cipher2.init(Cipher.ENCRYPT_MODE, secretKey);
-			  CipherInputStream cis = new CipherInputStream(fis, cipher2);
-			  doCopy(cis, os);
-			  //----------------
-*/
-
-
             FileOutputStream os = new FileOutputStream(destinazione);
-
 
             //chiave messaggio
             KeyGenerator keyGenerator = KeyGenerator.getInstance(Match.cifrario_m.get(this.cifrario_m));
@@ -155,36 +110,25 @@ public class NewFile {
             ArrayList<Byte> bytes = new ArrayList<Byte>();
             bytes.addAll(Utils.toByteArrayNonprimitive(mittente.getBytes("UTF-8")));
             bytes.add(sl);
-            tot = mittente.getBytes("UTF-8").length + 1;
             bytes.addAll(Utils.toByteArrayNonprimitive(destinatario.getBytes("UTF-8")));
             bytes.add(sl);
-            tot = destinatario.getBytes("UTF-8").length + 1;
             bytes.add(cifrario_m);
             bytes.add(sl);
-            tot += 2;
             bytes.add(cifrario_k);
             bytes.add(sl);
-            tot += 2;
             bytes.add(padding);
             bytes.add(sl);
-            tot += 2;
             bytes.add(integrita);
             bytes.add(sl);
-            tot += 2;
             bytes.add(modo_operativo);
             bytes.add(sl);
-            tot += 2;
             bytes.add(tipo);
             bytes.add(sl);
-            tot += 2;
             bytes.add(dimensione_firma);
             bytes.add(sl);
-            tot += 2;
             bytes.addAll(Utils.toByteArrayNonprimitive(salt));
-            tot += salt.length;
             int n = this.cifrario_m == (byte) 0x00 ? 16 : 8;
             iv = new byte[n];
-            tot += n;
             if (modo_operativo != (byte) 0x00) {
                 random.nextBytes(iv);
 
@@ -194,26 +138,12 @@ public class NewFile {
             bytes.addAll(Utils.toByteArrayNonprimitive(iv));
 
             os.write(Utils.toByteArray(bytes));
-
+            tot = bytes.size();
             int i = 0;
 
             //cifrario RSA
             //Cipher cipherkey = Cipher.getInstance("RSA/" + Match.modi_operativi.get(this.modo_operativo) + "/" + Match.padding.get(this.padding) + "Padding");
             Cipher cipherkey = Cipher.getInstance("RSA/ECB/" + Match.padding.get(this.padding) + "Padding");
-            /*
-            //leggi chiave pubblica
-            FileInputStream fis = new FileInputStream(keyFile);
-            byte[] publickeyBytes = fis.readAllBytes();
-            fis.close();
-            //da bytes a PublicKey, la public key viene codificata con x509, la privata dovrebbe essere PKCS8 CONTROLLARE
-            X509EncodedKeySpec ks = new X509EncodedKeySpec(publickeyBytes);
-            KeyFactory kf = KeyFactory.getInstance("RSA");
-            PublicKey publickey = kf.generatePublic(ks);
-            */
-
-            //genera chiave pubblica e privata
-            //saveKeyPair(cifrario_k, "RSA");
-
 
             //cifra la chiave
             X509EncodedKeySpec ks = new X509EncodedKeySpec(kr.getKey("RSAPublic"));
@@ -224,11 +154,7 @@ public class NewFile {
             byte byteKey[] = secretKey.getEncoded();
             byte[] cypherkey = cipherkey.doFinal(byteKey);
             System.out.println("lunghezza chiave des aes " + cypherkey.length + "\n" + cypherkey[0]);
-            i=0;
-            while (i < cypherkey.length) {
-                System.out.print(cypherkey[i] + " ");
-                i++;
-            }
+
             System.out.println(" ");
 
             kr.saveKey(cypherkey, "Secret");
@@ -243,59 +169,70 @@ public class NewFile {
             }
             int lunghezza = 0;
             int block = 8;
-            if (integrita == 0) {
-                //Signature signature = Signature.getInstance (Match.tipo.get(this.tipo));
-                Signature signature = Signature.getInstance("SHA224withDSA");
+            if(integrita == 0) {
+                Signature signature = Signature.getInstance (Match.tipo.get(this.tipo));
+                //Signature signature = Signature.getInstance ("SHA224withDSA");
+                saveKeyPair( dimensione_firma,"DSA");
 
-                KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DSA");
-                KeyPair keyPair = keyPairGenerator.generateKeyPair();
-                kr.saveKey(keyPair.getPublic().getEncoded(), "DSAPub");
-                kr.saveKey(keyPair.getPrivate().getEncoded(), "DSAPri");
 
-                signature.initSign(keyPair.getPrivate());
+                PKCS8EncodedKeySpec ks2 = new PKCS8EncodedKeySpec(kr.getKey("DSAPrivate"));
+                KeyFactory kf2 = KeyFactory.getInstance("DSA");
+                PrivateKey privateKey = kf2.generatePrivate(ks2);
+
+                signature.initSign (privateKey);
 
                 FileInputStream f = new FileInputStream(file);
-                while (block == 8) {
-                    block = f.readNBytes(buffer, 0, block);
-                    if (block != 8) {
+                while(block == 8) {
+                    block=f.readNBytes(buffer,0,block);
+                    if(block!=8) {
                         byte[] buffer2 = new byte[block];
-                        for (int p = 0; p < buffer2.length; p++)
-                            buffer2[p] = buffer[p];
+                        for(int p=0;p<buffer2.length;p++)
+                            buffer2[p]=buffer[p];
                         signature.update(buffer2);
-                        for (int p = 0; p < buffer2.length; p++)
+                        for(int p=0;p<buffer2.length;p++)
                             System.out.print(buffer2[p]);
-                    } else {
-                        for (int p = 0; p < buffer.length; p++)
+                    }
+                    else {
+                        for(int p=0;p<buffer.length;p++)
                             System.out.print(buffer[p]);
                         signature.update(buffer);
                     }
                 }
-                byte[] digitalSignature = signature.sign();
+
+                byte [] digitalSignature = signature.sign ();
+                System.out.println("Firma+lunghezza: "+ digitalSignature.length);
+                for(int p=0;p<digitalSignature.length;p++)
+                    System.out.print(digitalSignature[p]);
                 os.write(digitalSignature);
+                tot += digitalSignature.length;
+
                 os.flush();
                 os.close();
                 f.close();
-                tot += digitalSignature.length;
                 f = new FileInputStream(file);
                 System.out.println();
-                RandomAccessFile file1 = new RandomAccessFile(destinazione, "rw");
-                for (int p = 0; p < tot; p++) {
-                    byte c = file1.readByte();
-                }
-                block = 8;
-                while (block == 8) {
-                    block = f.readNBytes(buffer, 0, block);
-                    if (block != 8) {
+                int c;
+                RandomAccessFile file1 = new RandomAccessFile (destinazione,"rw");
+                for(int p=0;p<tot;p++)
+                    c = file1.read();
+
+
+                System.out.println("Messaggio con la cifratura");
+                block=8;
+                while(block == 8) {
+                    block=f.readNBytes(buffer,0,block);
+                    if(block!=8) {
                         byte[] buffer2 = new byte[block];
-                        for (int p1 = 0; p1 < buffer2.length; p1++)
-                            buffer2[p1] = buffer[p1];
-                        for (int p1 = 0; p1 < buffer2.length; p1++)
+                        for(int p1=0;p1<buffer2.length;p1++)
+                            buffer2[p1]=buffer[p1];
+                        for(int p1=0;p1<buffer2.length;p1++)
                             System.out.print(buffer2[p1]);
-                        file1.write(cipher.update(buffer2, 0, block));
-                    } else {
-                        for (int p1 = 0; p1 < buffer.length; p1++)
+                        file1.write(cipher.update(buffer2,0,block));
+                    }
+                    else {
+                        for(int p1=0;p1<buffer.length;p1++)
                             System.out.print(buffer[p1]);
-                        file1.write(cipher.update(buffer, 0, block));
+                        file1.write(cipher.update(buffer,0,block));
                     }
 
                 }
@@ -306,7 +243,7 @@ public class NewFile {
 
 
             }
-            if (integrita == 1) {
+            if(integrita == 1) {
 
                 if (Match.tipo.get(this.tipo) == "HmacMD5")
                     lunghezza = 16;
@@ -355,14 +292,10 @@ public class NewFile {
                     byte c = file1.readByte();
                     //System.out.println((char)c);
                 }
-
                 file1.write(macBytes2);
                 file1.close();
-
-
             }
             if (integrita == 2) {
-                //Signature signature = Signature.getInstance (Match.tipo.get(this.tipo));
                 if (Match.tipo.get(this.tipo) == "Sha-1")
                     lunghezza = 20;
                 if (Match.tipo.get(this.tipo) == "Sha-224")
@@ -424,7 +357,9 @@ public class NewFile {
         }
     }
 
-    public boolean decodifica(File file, File destinazione) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
+
+
+    public boolean decodifica(File file, File destinazione) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, SignatureException {
 
         SharesRing sr = SharesRing.getInstance();
         kr = sr.rebuild(file.getName());
@@ -488,11 +423,7 @@ public class NewFile {
         cipherkey.init(Cipher.DECRYPT_MODE, privateKey);
 
         System.out.println("lunghezza chiave des aes " + secretKey.length + "\n" + secretKey[0]);
-        i=0;
-        while (i < secretKey.length) {
-            System.out.print(secretKey[i] + " ");
-            i++;
-        }
+
         System.out.println(" ");
         byte[] secretKeyDecodedByte = cipherkey.doFinal(secretKey);
 
@@ -506,49 +437,120 @@ public class NewFile {
             cipher.init(Cipher.DECRYPT_MODE, secretKeyDecoded, new IvParameterSpec(iv));
         }
         byte[] buffer = new byte[8];
-        //messaggio + mac
-        byte[] mac;
-        if (Match.tipo.get(this.tipo) == "HmacMD5")
-            mac = fis.readNBytes(16);
-        if (Match.tipo.get(this.tipo) == "HmacSHA256")
-            mac = fis.readNBytes(32);
-        if (Match.tipo.get(this.tipo) == "HmacSHA384")
-            mac = fis.readNBytes(48);
+        if(integrita==0) {
+            X509EncodedKeySpec ks2 = new X509EncodedKeySpec(kr.getKey("DSAPublic"));
+            KeyFactory kf2 = KeyFactory.getInstance("DSA");
+            PublicKey publicKey = kf2.generatePublic(ks2);
 
-        FileOutputStream fos = new FileOutputStream(destinazione);
+            byte [] temp = fis.readNBytes(2);
+            byte[] digitalSignature=new byte[(int)temp[1]+2];
 
-        //inserire parte inserimentoo chiave dal keyring
-        Mac mac2 = Mac.getInstance(Match.tipo.get(this.tipo));
-        SecretKeySpec macKey = new SecretKeySpec(kr.getKey("MAC"), mac2.getAlgorithm());
-        mac2.init(macKey);
+            for(int p=0;p<digitalSignature.length;p++) {
+                if(p<2)
+                    digitalSignature[p]=temp[p];
+                else
+                    digitalSignature[p]=(byte)fis.read();
+            }
+            for(int p=0;p<digitalSignature.length;p++)
+                System.out.print(digitalSignature[p]);
+            System.out.println();
+            Signature signature = Signature.getInstance (Match.tipo.get(this.tipo));
+            //Signature signature = Signature.getInstance("SHA224WithDSA");
 
-        int block = 8;
-        block = fis.read(buffer);
+            signature.initVerify(publicKey);
 
-        while (block == 8) {
-            byte[] c = cipher.update(buffer);
-            for (int p = 0; p < c.length; p++)
-                System.out.print(c[p]);
-            fos.write(c);
-            mac2.update(c);
-            block = fis.readNBytes(buffer, 0, block);
+            FileOutputStream fos = new FileOutputStream(destinazione);
 
+            //inserire parte inserimentoo chiave dal keyring
+            int block = 8;
+            block=fis.read(buffer);
+            while(block == 8) {
+                byte[] c = cipher.update(buffer);
+                for(int p=0;p<c.length;p++)
+                    System.out.print(c[p]);
+                signature.update(c);
+                fos.write(c);
+                block=fis.readNBytes(buffer,0,block);
+            }
+            byte[] o = cipher.doFinal();
+            fos.write(o);
+            System.out.println();
+            for(int p=0;p<o.length;p++)
+                System.out.print(o[p]);
+            signature.update(o);
+            boolean verified = signature.verify(digitalSignature);
+            System.out.println(verified);
+            fos.flush();
+            fos.close();
+            fis.close();
         }
-        byte[] o = cipher.doFinal();
-        fos.write(o);
-        System.out.println();
-        for (int p = 0; p < o.length; p++)
-            System.out.println(o[p]);
-        mac2.update(o);
-        byte[] macBytes2 = mac2.doFinal();
-        System.out.print("\ndecodifica\n");
-        for (int p = 0; p < macBytes2.length; p++)
-            System.out.print(macBytes2[p]);
-        fos.flush();
-        fos.close();
-        fis.close();
+        if(integrita==1) {
+            byte[] mac=null;
+            if(Match.tipo.get(this.tipo)=="HmacMD5")
+                mac = fis.readNBytes(16);
+            if(Match.tipo.get(this.tipo)=="HmacSHA256")
+                mac = fis.readNBytes(32);
+            if(Match.tipo.get(this.tipo)=="HmacSHA384")
+                mac = fis.readNBytes(48);
+            System.out.println();
+            for(int ll=0;ll<mac.length;ll++)
+                System.out.print(mac[ll]);
+            FileOutputStream fos = new FileOutputStream(destinazione);
 
+            //inserire parte inserimentoo chiave dal keyring
+            Mac mac2 = Mac.getInstance(Match.tipo.get(this.tipo));
+            SecretKeySpec macKey = new SecretKeySpec(kr.getKey("MAC"), mac2.getAlgorithm());
+            mac2.init(macKey);
+
+            int block = 8;
+            block=fis.read(buffer);
+
+            while(block == 8) {
+                byte[] c = cipher.update(buffer);
+                for(int p=0;p<c.length;p++)
+                    System.out.print(c[p]);
+                fos.write(c);
+                mac2.update(c);
+                block=fis.readNBytes(buffer,0,block);
+            }
+            byte[] o = cipher.doFinal();
+            fos.write(o);
+            System.out.println();
+            for(int p=0;p<o.length;p++)
+                System.out.println(o[p]);
+            mac2.update(o);
+            byte[] macBytes2 = mac2.doFinal();
+            System.out.print("\ndecodifica\n");
+            for(int p=0;p<macBytes2.length;p++)
+                System.out.print(macBytes2[p]);
+            fos.flush();
+            fos.close();
+            fis.close();
+        }
         return true;
+
     }
+
+    public static KeyRing createKeyPair(byte size, String type, KeyRing kr){
+        try {
+            if (kr == null) {
+                kr = new KeyRing(Const.ANYMESSAGEID);//???
+            }
+            KeyPairGenerator gen = KeyPairGenerator.getInstance(type);
+
+            gen.initialize(Match.dimensione.get(size));
+            KeyPair k = gen.generateKeyPair();
+            Key publickey = k.getPublic();
+            Key privatekey = k.getPrivate();
+
+            kr.saveKey(publickey.getEncoded(), type + "Public");
+            kr.saveKey(privatekey.getEncoded(), type + "Private");
+            return kr;
+        } catch(NoSuchAlgorithmException e){
+            throw new RuntimeException("Algoritmo: " + type,e);
+        }
+
+    }
+
 }
 

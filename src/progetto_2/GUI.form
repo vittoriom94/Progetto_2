@@ -2,7 +2,7 @@
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="progetto_2.GUI">
   <grid id="27dc6" binding="panelMain" layout-manager="BorderLayout" hgap="0" vgap="0">
     <constraints>
-      <xy x="20" y="20" width="671" height="400"/>
+      <xy x="20" y="20" width="671" height="463"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -212,15 +212,6 @@
                   <text value="Codifica"/>
                 </properties>
               </component>
-              <component id="b1bbc" class="javax.swing.JButton" binding="keyFileButton">
-                <constraints>
-                  <grid row="2" column="10" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                  <gridbag weightx="0.0" weighty="0.0"/>
-                </constraints>
-                <properties>
-                  <text value="File chiavi"/>
-                </properties>
-              </component>
               <component id="b7ec0" class="javax.swing.JComboBox" binding="paddingRSASelect">
                 <constraints>
                   <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
@@ -257,7 +248,7 @@
               </component>
               <component id="dc89" class="javax.swing.JButton" binding="decodificaButton" default-binding="true">
                 <constraints>
-                  <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="0.0" weighty="0.0"/>
                 </constraints>
                 <properties>
@@ -276,14 +267,14 @@
                   <gridbag weightx="0.0" weighty="1.0"/>
                 </constraints>
               </vspacer>
-              <component id="e8034" class="javax.swing.JButton" binding="keyFileDecodeButton">
+              <component id="746b1" class="javax.swing.JList" binding="list1" default-binding="true">
                 <constraints>
-                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                  <gridbag weightx="0.0" weighty="0.0"/>
+                  <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="2" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="50"/>
+                  </grid>
+                  <gridbag weightx="0.0" weighty="1.0"/>
                 </constraints>
-                <properties>
-                  <text value="File chiavi"/>
-                </properties>
+                <properties/>
               </component>
             </children>
           </grid>
@@ -311,7 +302,7 @@
               </hspacer>
               <vspacer id="787bb">
                 <constraints>
-                  <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                  <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="0.0" weighty="1.0"/>
                 </constraints>
               </vspacer>
@@ -371,6 +362,15 @@
                   <gridbag weightx="0.0" weighty="0.0"/>
                 </constraints>
                 <properties/>
+              </component>
+              <component id="fcbb5" class="javax.swing.JButton" binding="pulisciKeyringButton" default-binding="true">
+                <constraints>
+                  <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <gridbag weightx="0.0" weighty="0.0"/>
+                </constraints>
+                <properties>
+                  <text value="Pulisci keyring"/>
+                </properties>
               </component>
             </children>
           </grid>

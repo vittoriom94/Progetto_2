@@ -17,7 +17,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GUI {
-    final int BUFFER = 8;
     private JTabbedPane tabbedPane1;
     private ButtonGroup buttonGroup1;
     private JComboBox codificaMSelect;
@@ -44,6 +43,8 @@ public class GUI {
     private JButton generaRSAButton;
     private JComboBox sharesBox;
     private JComboBox sharesMinBox;
+    private JButton pulisciKeyringButton;
+    private JList list1;
 
     private File codificaFile = null;
     private File decodificaFile = null;
@@ -149,11 +150,9 @@ public class GUI {
 
 
                 int returnValue = fc.showOpenDialog(null);
-                // int returnValue = jfc.showSaveDialog(null);
 
                 if (returnValue == JFileChooser.APPROVE_OPTION) {
                     decodificaFile = fc.getSelectedFile();
-                    System.out.println(decodificaFile.getAbsolutePath());
                 }
             }
         });
@@ -190,6 +189,8 @@ public class GUI {
                             e1.printStackTrace();
                         } catch (InvalidAlgorithmParameterException e1) {
                             e1.printStackTrace();
+                        } catch (SignatureException e1) {
+                            e1.printStackTrace();
                         }
                     }
 
@@ -197,36 +198,7 @@ public class GUI {
                 }
             }
         });
-        keyFileButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
-                fc.setSelectedFile(new File("chiavi.txt"));
 
-
-                int returnValue = fc.showOpenDialog(null);
-                // int returnValue = jfc.showSaveDialog(null);
-
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
-                    keyFileEncode = fc.getSelectedFile();
-                }
-            }
-        });
-        keyFileDecodeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
-                fc.setSelectedFile(new File("chiaviPrivate.txt"));
-
-
-                int returnValue = fc.showOpenDialog(null);
-                // int returnValue = jfc.showSaveDialog(null);
-
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
-                    keyFileDecode = fc.getSelectedFile();
-                }
-            }
-        });
         generaPrimoButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -239,24 +211,7 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //genera rsa
-
-                KeyRing kr = new KeyRing(Const.ANYMESSAGEID);
-                KeyPairGenerator gen = null;
-                try {
-                    gen = KeyPairGenerator.getInstance("RSA");
-                } catch (NoSuchAlgorithmException e1) {
-                    throw new RuntimeException(e1);
-                }
-
-                gen.initialize(Match.dimensione.get((byte) dimRSASelect.getSelectedIndex()));
-                KeyPair k = gen.generateKeyPair();
-                Key publickey = k.getPublic();
-                Key privatekey = k.getPrivate();
-
-
-                kr.saveKey(publickey.getEncoded(), "RSA" + "Public");
-                kr.saveKey(privatekey.getEncoded(), "RSA" + "Private");
-
+                KeyRing kr = NewFile.createKeyPair((byte) dimRSASelect.getSelectedIndex(), "RSA", null);
                 kr.saveShamir(sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
 
             }
@@ -292,6 +247,25 @@ public class GUI {
                     e.consume();
                 }
                 super.keyTyped(e);
+            }
+        });
+        dimDSASelect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(dimDSASelect.getSelectedIndex()==1) {
+                    DSASelect.setMaximumRowCount(3);
+                    DSASelect.setModel(new DefaultComboBoxModel<>(new String[]{"SHA224withDSA", "SHA256withDSA"}));
+                } else {
+
+                    DSASelect.setMaximumRowCount(3);
+                    DSASelect.setModel(new DefaultComboBoxModel<>(new String[]{"SHA1withDSA", "SHA224withDSA", "SHA256withDSA"}));
+                }
+            }
+        });
+        pulisciKeyringButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Utils.deleteData();
             }
         });
     }
@@ -336,13 +310,10 @@ public class GUI {
         byte padding = (byte) paddingRSASelect.getSelectedIndex();
         byte integrita;
         byte type;
-        byte hash = 0x08;
-        byte mac = 0x08;
-        byte firma = 0x08;
         byte dimFirma = 0x08;
         if (firmaRadio.isSelected()) {
             integrita = 0x00;
-            type = (byte) (DSASelect.getSelectedIndex() + 8);
+            type = (byte) (DSASelect.getSelectedIndex() + 8+dimDSASelect.getSelectedIndex());
             dimFirma = (byte) dimDSASelect.getSelectedIndex();
 
         } else if (MACRadio.isSelected()) {
@@ -355,7 +326,7 @@ public class GUI {
         byte modi_operativi = (byte) modiSelect.getSelectedIndex();
 
         System.out.println(mittente + " " + destinatario + " " + cifrario_m);
-        NewFile f = new NewFile(mittente.replace("#", ""), destinatario.replace("#", ""), cifrario_m,
+        NewFile f = new NewFile(mittente.replace(Const.MESSAGESEPARATOR, ""), destinatario.replace(Const.MESSAGESEPARATOR, ""), cifrario_m,
                 cifrario_k_dim, padding, integrita, null, modi_operativi, null, type, dimFirma, null);
         try {
 
@@ -381,14 +352,8 @@ public class GUI {
     }
 
 
-    public static void main(String args[]) throws IOException {
+    public static void main(String args[]) {
         Utils.createServers();
-
-        //SharesRing.distribute();
-        //System.out.println();
-
-
-
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -416,45 +381,13 @@ public class GUI {
         /* Create and display the form */
         EventQueue.invokeLater(new Runnable() {
             public void run() {
-                JFrame app = new JFrame("App");
+                JFrame app = new JFrame("Codifica");
                 app.setContentPane(new GUI().panelMain);
                 app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 app.pack();
                 app.setVisible(true);
             }
         });
-        try {
-
-
-            File f = new File("prova.txt");
-
-            FileOutputStream fos = new FileOutputStream(f);
-            if (!f.exists()) {
-                f.createNewFile();
-            }
-            byte[] bytesArray = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14};
-
-            fos.write(bytesArray);
-            fos.flush();
-            fos.close();
-
-
-            int BUFFER = 4;
-            FileInputStream fis = new FileInputStream(f);
-            byte[] buffer = new byte[BUFFER]; //array contentente i byte letti a ogni iterazione
-            int read = 0; //ignorare
-            while ((read = fis.read(buffer)) > 0) {
-                //effettua update
-                String s = "";
-                for (byte b : buffer) {
-                    s = s + (char) b;
-                }
-                System.out.println(s);
-            }
-            //qui dovrebbe esserci il dofinal??
-            fis.close();
-        } catch (Exception e) {
-        }
     }
 
     {
