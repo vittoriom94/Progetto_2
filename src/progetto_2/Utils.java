@@ -38,15 +38,27 @@ public class Utils {
 
 
     public static BigInteger getBigInteger(byte[] b){
-        byte[] b2 = new byte[b.length+1];
+        byte[] b2 = new byte[b.length+2];
         b2[0]=0;
+        b2[1]=-1;
         for(int i =0;i<b.length;i++){
-            b2[i+1]=b[i];
+            b2[i+2]=b[i];
         }
         return new BigInteger(b2);
+        //System.out.println();
+        //BigInteger bi = new BigInteger(1, b);
+        //return bi;
     }
     public static byte[] getbyteFromBigInteger(BigInteger bi){
-        return bi.toByteArray();
+        byte[] b1 = bi.toByteArray();
+        byte[] b2 = new byte[b1.length-2];
+
+        for(int i =2;i<b1.length;i++){
+            b2[i-2]=b1[i];
+        }
+        return b2;
+        //byte[] b = bi.toByteArray();
+        //return b;
     }
 
     public static Byte[] frombyteToByte(byte[] bytes) {
@@ -55,7 +67,7 @@ public class Utils {
 
         int i = 0;
         for (byte b : bytes)
-            byteObjects[i++] = b;  // Autoboxing.
+            byteObjects[i++] = b;
         return byteObjects;
     }
     public static byte[] fromByteTobyte(Byte[] byteObjects) {
@@ -125,6 +137,27 @@ public class Utils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void testBiginteger(){
+        byte[] b1 = {0,-1,0,1,2,3,4,5};
+        byte[] b2 = {0,-1,0,-1,2,3,4,5};
+        byte[] b3 = {0,-1,0,0,2,3,4,5};
+        byte[] b4 = {0,-1,0,0,-2,3,4,5};
+
+        BigInteger bi1 = new BigInteger(1,b1);
+        BigInteger bi2 = new BigInteger(1,b2);
+        BigInteger bi3 = new BigInteger(1,b3);
+        BigInteger bi4 = new BigInteger(1,b4);
+
+        byte[] br1 = bi1.toByteArray();
+        byte[] br2 = bi2.toByteArray();
+        byte[] br3 = bi3.toByteArray();
+        byte[] br4 = bi4.toByteArray();
+
+
+        System.out.println();
+
     }
 }
 

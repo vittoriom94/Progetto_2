@@ -166,28 +166,8 @@ public class GUI {
 
                     if (returnValue == JFileChooser.APPROVE_OPTION) {
                         File destinationFile = fc.getSelectedFile();
-                        NewFile nf = new NewFile();
-                        try {
-                            nf.decodifica(decodificaFile, destinationFile);
-                        } catch (IOException e1) {
-                            e1.printStackTrace();
-                        } catch (NoSuchAlgorithmException e1) {
-                            e1.printStackTrace();
-                        } catch (InvalidKeyException e1) {
-                            e1.printStackTrace();
-                        } catch (NoSuchPaddingException e1) {
-                            e1.printStackTrace();
-                        } catch (BadPaddingException e1) {
-                            e1.printStackTrace();
-                        } catch (InvalidKeySpecException e1) {
-                            e1.printStackTrace();
-                        } catch (IllegalBlockSizeException e1) {
-                            e1.printStackTrace();
-                        } catch (InvalidAlgorithmParameterException e1) {
-                            e1.printStackTrace();
-                        } catch (SignatureException e1) {
-                            e1.printStackTrace();
-                        }
+                        NewFile.decodifica(decodificaFile, destinationFile);
+
                     }
 
 
@@ -307,43 +287,27 @@ public class GUI {
         byte integrita;
         byte type;
         byte dimFirma = 0x08;
+        byte modi_operativi = (byte) modiSelect.getSelectedIndex();
         if (firmaRadio.isSelected()) {
             integrita = 0x00;
             type = (byte) (DSASelect.getSelectedIndex() + 8 + dimDSASelect.getSelectedIndex());
             dimFirma = (byte) dimDSASelect.getSelectedIndex();
+            CodificaSign f = new CodificaSign(mittente.replace(Const.MESSAGESEPARATOR, ""), destinatario.replace(Const.MESSAGESEPARATOR, ""), cifrario_m,
+                    cifrario_k_dim, padding, integrita, modi_operativi, type, dimFirma, codificaFile, destinationFile, sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
+
 
         } else if (MACRadio.isSelected()) {
             integrita = 0x01;
             type = (byte) (macSelect.getSelectedIndex() + 5);
+            CodificaMAC f = new CodificaMAC(mittente.replace(Const.MESSAGESEPARATOR, ""), destinatario.replace(Const.MESSAGESEPARATOR, ""), cifrario_m,
+                    cifrario_k_dim, padding, integrita, modi_operativi, type, dimFirma, codificaFile, destinationFile, sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
+
         } else {
             integrita = 0x02;
             type = (byte) hashSelect.getSelectedIndex();
-        }
-        byte modi_operativi = (byte) modiSelect.getSelectedIndex();
+            CodificaHash f = new CodificaHash(mittente.replace(Const.MESSAGESEPARATOR, ""), destinatario.replace(Const.MESSAGESEPARATOR, ""), cifrario_m,
+                    cifrario_k_dim, padding, integrita, modi_operativi, type, dimFirma, codificaFile, destinationFile, sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
 
-        System.out.println(mittente + " " + destinatario + " " + cifrario_m);
-        NewFile f = new NewFile(mittente.replace(Const.MESSAGESEPARATOR, ""), destinatario.replace(Const.MESSAGESEPARATOR, ""), cifrario_m,
-                cifrario_k_dim, padding, integrita, modi_operativi, type, dimFirma);
-        try {
-
-
-            f.codifica(codificaFile, destinationFile, sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
-        } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchPaddingException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (BadPaddingException e) {
-            e.printStackTrace();
-        } catch (IllegalBlockSizeException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        } catch (InvalidKeySpecException e) {
-            e.printStackTrace();
-        } catch (InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
-        } catch (SignatureException e) {
-            e.printStackTrace();
         }
     }
 
