@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 public class CodificaMAC  extends NewFile{
     private Mac mac;
@@ -22,7 +23,8 @@ public class CodificaMAC  extends NewFile{
     }
     @Override
     protected boolean verify(byte[] verifier, byte[] newVerifier) {
-        return false;
+    	boolean result = Arrays.equals(verifier, newVerifier); 	
+        return result;
     }
 
     @Override

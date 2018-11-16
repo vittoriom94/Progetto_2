@@ -66,13 +66,13 @@ public abstract class NewFile {
 
     }
 
-    public static void decodifica(File file, File destinazione){
+    public static boolean decodifica(File file, File destinazione){
         try {
 
             FileInputStream fis = new FileInputStream(file);
             NewFile nf =  readHeader(fis);
-            nf.completeDecode(fis,file,destinazione);
-
+            boolean result = nf.completeDecode(fis,file,destinazione);
+            return result;
 
         } catch(IOException | SignatureException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException | NoSuchPaddingException | IllegalBlockSizeException | InvalidAlgorithmParameterException e){
             throw new RuntimeException(e);
@@ -80,7 +80,7 @@ public abstract class NewFile {
 
     }
 
-    private void completeDecode(FileInputStream fis,File file, File destinazione) throws NoSuchPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidKeySpecException, InvalidAlgorithmParameterException, IOException, SignatureException {
+    private boolean completeDecode(FileInputStream fis,File file, File destinazione) throws NoSuchPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidKeySpecException, InvalidAlgorithmParameterException, IOException, SignatureException {
         this.destinazione = destinazione;
         SharesRing sr = SharesRing.getInstance();
         kr = sr.rebuild(file.getName());
@@ -89,10 +89,12 @@ public abstract class NewFile {
         byte[] verifier = readVerifier(fis);
         getVerifier();
         byte[] newVerifier = bufferReadDecode(fis, cipher);
+        
         boolean v = verify(verifier, newVerifier);
+        return v;
     }
 
-    protected abstract boolean verify(byte[] verifier, byte[] newVerifier);
+    protected abstract boolean verify(byte[] verifier, byte[] newVerifier) throws SignatureException;
 
     private Cipher getCipher(SecretKey secretKey) throws InvalidAlgorithmParameterException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
         Cipher cipher = Cipher.getInstance(Match.cifrario_m.get(this.cifrario_m) + "/" + Match.modi_operativi.get(this.modo_operativo) + "/PKCS5Padding");

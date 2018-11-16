@@ -25,8 +25,9 @@ public class CodificaSign extends NewFile{
     }
 
     @Override
-    protected boolean verify(byte[] verifier, byte[] newVerifier) {
-        return false;
+    protected boolean verify(byte[] verifier, byte[] newVerifier) throws SignatureException {
+    	boolean result = signature.verify(verifier);   	
+        return result;
     }
 
     @Override
@@ -59,7 +60,7 @@ public class CodificaSign extends NewFile{
             if (p < 2)
                 digitalSignature[p] = temp[p];
             else
-                digitalSignature[p] = (byte) fis.read();
+                digitalSignature[p] = (byte) fis.read(); 	
         }
         return digitalSignature;
     }

@@ -43,6 +43,7 @@ public class GUI {
     private JComboBox sharesMinBox;
     private JButton pulisciKeyringButton;
     private JList list1;
+    private JOptionPane text;
 
     private File codificaFile = null;
     private File decodificaFile = null;
@@ -166,8 +167,11 @@ public class GUI {
 
                     if (returnValue == JFileChooser.APPROVE_OPTION) {
                         File destinationFile = fc.getSelectedFile();
-                        NewFile.decodifica(decodificaFile, destinationFile);
-
+                        boolean result = NewFile.decodifica(decodificaFile, destinationFile);
+                        if(result==true)
+                        	JOptionPane.showMessageDialog(null, "Messaggio corretto");
+                        else
+                        	JOptionPane.showMessageDialog(null, "Messaggio non corretto");
                     }
 
 

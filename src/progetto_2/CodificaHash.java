@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 public class CodificaHash extends NewFile{
     private MessageDigest digest;
@@ -21,7 +22,8 @@ public class CodificaHash extends NewFile{
 
     @Override
     protected boolean verify(byte[] verifier, byte[] newVerifier) {
-        return false;
+    	boolean result = Arrays.equals(verifier, newVerifier); 	
+        return result;
     }
 
     @Override
