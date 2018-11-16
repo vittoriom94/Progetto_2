@@ -35,16 +35,45 @@ public class MessageShare {
     SecretSharing sc;
 
     public MessageShare(int k,int n){
-
+        sc = SharesRing.getInstance().getShamir();
         this.k=k;
         this.n=n;
 
     }
 
+    public void shareFile(FileInputStream fis) throws IOException {
+        byte[] buffer = new byte[Const.BUFFER];
+        int block = Const.BUFFER;
+        int i = 0;
+        Map<BigInteger, BigInteger> shares;
+
+        while (block == Const.BUFFER) {
+            block = fis.readNBytes(buffer, 0, block);
+            i++;
+            if (block != 8) {
+                byte[] buffer2 = new byte[block];
+                for (int p = 0; p < buffer2.length; p++)
+                    buffer2[p] = buffer[p];
+                //do something buffer2
+                shares = genBlock(buffer2);
+
+            } else {
+                //do something buffer
+                shares = genBlock(buffer);
+
+            }
+            //leggi bufferizzato (while)
+            //      blocco i: distribuisci, ottieni le share, salva le share
+
+        }
+    }
+
+
+
 
     //suddivide il file in blocchi di grandezza buffer
 
-    public HashMap<Integer,byte[]> divideFile(byte[] file, int buffer) {
+    public HashMap<Integer,byte[]> divideFile(FileInputStream file) {
 
         int dim_row=(int)Math.ceil(file.length / (int)buffer)+1;
         int dim_col=buffer;
@@ -60,28 +89,10 @@ public class MessageShare {
     }
 
     //converte i blocchi in biginteger e li passa a Shamir per generare le share
-
-    public void genBlock(){
-        for (Integer key : block_file.keySet()) {
-            s=new BigInteger(1,block_file.get(key));
-            int lenP = s.bitLength()+1;
-            SecretSharing sh= new SecretSharing(lenP);
-            shares = sh.genShares(s,k,n);
-            BigInteger b=new BigInteger("1");
-            files.put(BigInteger.valueOf(key), shares);
-
-
-        }
-
-        for(BigInteger key : files.keySet())
-        {for(BigInteger key2 : files.get(key).keySet())
-        {
-            System.out.println("chiave1: " + key + "  chiave2: "+ key2+ "  valore: " + files.get(key).get(key2));
-        }
-            System.out.println("\n");}
-        // distribute();
-
-
+    //non è bufferizzato, dare in input il blocco?
+    public Map<BigInteger, BigInteger> genBlock(byte[] block){
+            BigInteger s= Utils.getBigInteger(block);
+            return sc.genShares(s,k,n);
     }
 
 
@@ -95,6 +106,7 @@ public class MessageShare {
 
 
     //distribuisce i blocchi
+    //stessa cosa di sopra
     public void distribute() {
 
 
@@ -145,7 +157,7 @@ public class MessageShare {
 
     }
 
-
+    //non è bufferizzata
     public void restructure(String fileName){
 
         int dim=n*buffer;

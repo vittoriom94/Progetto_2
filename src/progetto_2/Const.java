@@ -9,4 +9,5 @@ public class Const {
     public final static String SEPARATORKR = "|";
     public final static String ANYMESSAGEID = "Free";
     public final static String MESSAGESEPARATOR = "#";
+    public static final int BUFFER = 512;
 }
