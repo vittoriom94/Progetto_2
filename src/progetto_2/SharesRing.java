@@ -163,7 +163,7 @@ public class SharesRing implements Serializable {
         return Utils.getbyteFromBigInteger(secret);
     }
 
-    private byte[] getShare(String name, File server) {
+    public static byte[] getShare(String name, File server) {
         File f = new File(server.getAbsolutePath() + "/" + name + ".share");
         if (f.exists()) {
             try {

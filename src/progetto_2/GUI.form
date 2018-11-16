@@ -60,25 +60,9 @@
                   <text value="MAC"/>
                 </properties>
               </component>
-              <component id="67e5c" class="javax.swing.JLabel">
-                <constraints>
-                  <grid row="0" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                  <gridbag weightx="0.0" weighty="0.0"/>
-                </constraints>
-                <properties>
-                  <text value="Firma"/>
-                </properties>
-              </component>
               <component id="7bc14" class="javax.swing.JComboBox" binding="macSelect">
                 <constraints>
                   <grid row="1" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
-                  <gridbag weightx="0.0" weighty="0.0"/>
-                </constraints>
-                <properties/>
-              </component>
-              <component id="325ec" class="javax.swing.JComboBox" binding="DSASelect">
-                <constraints>
-                  <grid row="1" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="0.0" weighty="0.0"/>
                 </constraints>
                 <properties/>
@@ -92,25 +76,9 @@
                   <text value="Modo Operativo"/>
                 </properties>
               </component>
-              <component id="9d2dc" class="javax.swing.JLabel">
-                <constraints>
-                  <grid row="2" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                  <gridbag weightx="0.0" weighty="0.0"/>
-                </constraints>
-                <properties>
-                  <text value="Dimensione Firma"/>
-                </properties>
-              </component>
               <component id="30837" class="javax.swing.JComboBox" binding="modiSelect">
                 <constraints>
                   <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
-                  <gridbag weightx="0.0" weighty="0.0"/>
-                </constraints>
-                <properties/>
-              </component>
-              <component id="abd22" class="javax.swing.JComboBox" binding="dimDSASelect">
-                <constraints>
-                  <grid row="3" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="0.0" weighty="0.0"/>
                 </constraints>
                 <properties/>
@@ -228,6 +196,22 @@
                   <text value="Padding RSA"/>
                 </properties>
               </component>
+              <component id="67e5c" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="0" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <gridbag weightx="0.0" weighty="0.0"/>
+                </constraints>
+                <properties>
+                  <text value="Firma"/>
+                </properties>
+              </component>
+              <component id="325ec" class="javax.swing.JComboBox" binding="DSASelect">
+                <constraints>
+                  <grid row="1" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                  <gridbag weightx="0.0" weighty="0.0"/>
+                </constraints>
+                <properties/>
+              </component>
             </children>
           </grid>
           <grid id="9ac1d" layout-manager="GridBagLayout">
@@ -302,7 +286,7 @@
               </hspacer>
               <vspacer id="787bb">
                 <constraints>
-                  <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                  <grid row="12" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="0.0" weighty="1.0"/>
                 </constraints>
               </vspacer>
@@ -370,6 +354,31 @@
                 </constraints>
                 <properties>
                   <text value="Pulisci Keyring"/>
+                </properties>
+              </component>
+              <component id="9d2dc" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <gridbag weightx="0.0" weighty="0.0"/>
+                </constraints>
+                <properties>
+                  <text value="Dimensione Firma"/>
+                </properties>
+              </component>
+              <component id="abd22" class="javax.swing.JComboBox" binding="dimDSASelect">
+                <constraints>
+                  <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                  <gridbag weightx="0.0" weighty="0.0"/>
+                </constraints>
+                <properties/>
+              </component>
+              <component id="4ee76" class="javax.swing.JButton" binding="generaFirmaButton">
+                <constraints>
+                  <grid row="11" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <gridbag weightx="0.0" weighty="0.0"/>
+                </constraints>
+                <properties>
+                  <text value="Genera Firma"/>
                 </properties>
               </component>
             </children>

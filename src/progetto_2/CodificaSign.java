@@ -86,7 +86,6 @@ public class CodificaSign extends NewFile{
     protected void createVerifier(FileOutputStream os) throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException {
 
             signature = Signature.getInstance(Match.tipo.get(tipo));
-            NewFile.createKeyPair(dimensione_firma, "DSA", kr);
 
 
             PKCS8EncodedKeySpec ks2 = new PKCS8EncodedKeySpec(kr.getKey("DSAPrivate"));

@@ -43,6 +43,7 @@ public class GUI {
     private JComboBox sharesMinBox;
     private JButton pulisciKeyringButton;
     private JList list1;
+    private JButton generaFirmaButton;
     private JOptionPane text;
 
     private File codificaFile = null;
@@ -168,10 +169,10 @@ public class GUI {
                     if (returnValue == JFileChooser.APPROVE_OPTION) {
                         File destinationFile = fc.getSelectedFile();
                         boolean result = NewFile.decodifica(decodificaFile, destinationFile);
-                        if(result==true)
-                        	JOptionPane.showMessageDialog(null, "Messaggio corretto");
+                        if (result == true)
+                            JOptionPane.showMessageDialog(null, "Messaggio corretto");
                         else
-                        	JOptionPane.showMessageDialog(null, "Messaggio non corretto");
+                            JOptionPane.showMessageDialog(null, "Messaggio non corretto");
                     }
 
 
@@ -248,6 +249,13 @@ public class GUI {
                 Utils.deleteData();
             }
         });
+        generaFirmaButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                KeyRing kr = NewFile.createKeyPair((byte) dimDSASelect.getSelectedIndex(), "DSA", null);
+                kr.saveShamir(sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
+            }
+        });
     }
 
     private void enableFirma() {
@@ -316,7 +324,8 @@ public class GUI {
     }
 
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws IOException {
+
         Utils.createServers();
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -412,13 +421,6 @@ public class GUI {
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
         panel1.add(label3, gbc);
-        final JLabel label4 = new JLabel();
-        label4.setText("Firma");
-        gbc = new GridBagConstraints();
-        gbc.gridx = 8;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
-        panel1.add(label4, gbc);
         macSelect = new JComboBox();
         gbc = new GridBagConstraints();
         gbc.gridx = 6;
@@ -426,27 +428,13 @@ public class GUI {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel1.add(macSelect, gbc);
-        DSASelect = new JComboBox();
-        gbc = new GridBagConstraints();
-        gbc.gridx = 8;
-        gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel1.add(DSASelect, gbc);
-        final JLabel label5 = new JLabel();
-        label5.setText("Modo Operativo");
+        final JLabel label4 = new JLabel();
+        label4.setText("Modo Operativo");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.WEST;
-        panel1.add(label5, gbc);
-        final JLabel label6 = new JLabel();
-        label6.setText("Dimensione Firma");
-        gbc = new GridBagConstraints();
-        gbc.gridx = 8;
-        gbc.gridy = 2;
-        gbc.anchor = GridBagConstraints.WEST;
-        panel1.add(label6, gbc);
+        panel1.add(label4, gbc);
         modiSelect = new JComboBox();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -454,13 +442,6 @@ public class GUI {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel1.add(modiSelect, gbc);
-        dimDSASelect = new JComboBox();
-        gbc = new GridBagConstraints();
-        gbc.gridx = 8;
-        gbc.gridy = 3;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel1.add(dimDSASelect, gbc);
         firmaRadio = new JRadioButton();
         firmaRadio.setText("Firma Digitale");
         gbc = new GridBagConstraints();
@@ -549,13 +530,27 @@ public class GUI {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel1.add(paddingRSASelect, gbc);
-        final JLabel label7 = new JLabel();
-        label7.setText("Padding RSA");
+        final JLabel label5 = new JLabel();
+        label5.setText("Padding RSA");
         gbc = new GridBagConstraints();
         gbc.gridx = 2;
         gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.WEST;
-        panel1.add(label7, gbc);
+        panel1.add(label5, gbc);
+        final JLabel label6 = new JLabel();
+        label6.setText("Firma");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 8;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel1.add(label6, gbc);
+        DSASelect = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 8;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel1.add(DSASelect, gbc);
         final JPanel panel2 = new JPanel();
         panel2.setLayout(new GridBagLayout());
         tabbedPane1.addTab("Decodifica", panel2);
@@ -614,7 +609,7 @@ public class GUI {
         final JPanel spacer9 = new JPanel();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 9;
+        gbc.gridy = 12;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.VERTICAL;
         panel3.add(spacer9, gbc);
@@ -625,13 +620,13 @@ public class GUI {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel3.add(dimRSASelect, gbc);
-        final JLabel label8 = new JLabel();
-        label8.setText("Dimensione RSA");
+        final JLabel label7 = new JLabel();
+        label7.setText("Dimensione RSA");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.WEST;
-        panel3.add(label8, gbc);
+        panel3.add(label7, gbc);
         generaRSAButton = new JButton();
         generaRSAButton.setText("Genera RSA");
         gbc = new GridBagConstraints();
@@ -639,20 +634,20 @@ public class GUI {
         gbc.gridy = 3;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel3.add(generaRSAButton, gbc);
-        final JLabel label9 = new JLabel();
-        label9.setText("Numero di share");
+        final JLabel label8 = new JLabel();
+        label8.setText("Numero di share");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 4;
         gbc.anchor = GridBagConstraints.WEST;
-        panel3.add(label9, gbc);
-        final JLabel label10 = new JLabel();
-        label10.setText("Numero di share minime");
+        panel3.add(label8, gbc);
+        final JLabel label9 = new JLabel();
+        label9.setText("Numero di share minime");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 6;
         gbc.anchor = GridBagConstraints.WEST;
-        panel3.add(label10, gbc);
+        panel3.add(label9, gbc);
         sharesBox = new JComboBox();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -674,6 +669,27 @@ public class GUI {
         gbc.gridy = 8;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel3.add(pulisciKeyringButton, gbc);
+        final JLabel label10 = new JLabel();
+        label10.setText("Dimensione Firma");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 9;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel3.add(label10, gbc);
+        dimDSASelect = new JComboBox();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 10;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel3.add(dimDSASelect, gbc);
+        generaFirmaButton = new JButton();
+        generaFirmaButton.setText("Genera Firma");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 11;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel3.add(generaFirmaButton, gbc);
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new BorderLayout(0, 0));
         panelMain.add(panel4, BorderLayout.SOUTH);

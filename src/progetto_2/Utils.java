@@ -159,5 +159,15 @@ public class Utils {
         System.out.println();
 
     }
+
+    public static void testMessageShare() throws IOException {
+        FileInputStream fis = new FileInputStream(new File("prova.txt"));
+        FileOutputStream fos = new FileOutputStream(new File("provaOUT.txt"));
+
+        MessageShare ms = new MessageShare(3,5);
+        ms.shareFile("prova.txt", fis);
+        ms.rebuilfFile("prova.txt", fos);
+
+    }
 }
 
