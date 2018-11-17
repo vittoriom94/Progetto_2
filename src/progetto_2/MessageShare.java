@@ -8,10 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-/**
- *
- * @author carmineannunziata
- */
+
 public class MessageShare implements Serializable {
 
     byte[] file;  //file in byte
