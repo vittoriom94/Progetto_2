@@ -6,10 +6,7 @@ import java.util.HashMap;
 import java.util.*;
 
 
-/**
- *
- * @author carmineannunziata
- */
+
 public class MessageShare implements Serializable {
     //string chiave: identificativo file   n-blocco
     private HashMap<Identifier, HashMap<Integer, HashMap<Integer, ShareEntry>>> mapFiles = new HashMap<>();
