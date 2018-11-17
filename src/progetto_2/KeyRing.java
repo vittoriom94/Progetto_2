@@ -1,78 +1,50 @@
 package progetto_2;
 
+import javax.security.sasl.AuthenticationException;
 import java.io.*;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
 public class KeyRing implements Serializable {
-    private String name = "";
+    private String name;
     private HashMap<String, Byte[]> keys;
-    public KeyRing(){
+    public KeyRing(String nomefile){
+        //this.keys = SharesRing.getInstance().checkGenericKeys();
         this.keys = new HashMap<>();
+        this.name = nomefile;
     }
 
-    public static KeyRing loadKeyring(File f){
-        KeyRing kr = null;
+
+    public byte[] getKey(String id) throws AuthenticationException {
         try {
-            FileInputStream fis = new FileInputStream(f);
-            ObjectInputStream ois = new ObjectInputStream(fis);
+            return Utils.fromByteTobyte(keys.get(id));
+        } catch (NullPointerException npe){
 
-            kr = (KeyRing) ois.readObject();
-            ois.close();
-            fis.close();
+            throw new AuthenticationException("La chiave " + id + " non è presente oppure non si dispone delle autorizzazioni necessarie");
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         }
-        return kr;
-    }
-
-    public byte[] getKey(String id){
-
-       return Utils.fromByteTobyte(keys.get(id));
     }
 
     public void saveKey(byte[] k, String id){
         keys.put(id, Utils.frombyteToByte(k));
     }
 
+    public void saveShamir(String mittente, String destinatario, int k, int n){
+        SharesRing sr = SharesRing.getInstance();
+        SecretSharing ss = sr.getShamir();
+        HashMap<String, HashMap<BigInteger,BigInteger>>   sharesAndIds = new HashMap<>();
 
-    public void saveShamir(int k, int n){
-        SharesRing sr = SharesRing.loadSharesRing(new File("sharesRing.txt"));
-
-        SecretSharing ss = new SecretSharing(20);
+        //aggiungi chiavi allo sharesring
         for( Map.Entry<String,Byte[]> e : keys.entrySet()){
             BigInteger secret = Utils.getBigInteger(Utils.fromByteTobyte(e.getValue()));
-            String id = name+"-"+e.getKey();
-            // le chiavi vanno da 1 a n
+            String id = e.getKey();
+
             HashMap<BigInteger, BigInteger> shares = (HashMap<BigInteger, BigInteger>) ss.genShares(secret,k,n);
-            sr.add( id, shares);
-        }
-        sr.saveSharesRing(new File("sharesRing.txt"));
 
-
-    }
-
-    public void saveKeyring(File f){
-        try {
-            FileOutputStream fos = new FileOutputStream(f);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-
-            oos.writeObject(this);
-
-            oos.close();
-            fos.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+            sharesAndIds.put( id, shares);
         }
 
+        sr.saveSharesRing(mittente,destinatario,name,k, sharesAndIds);
     }
-
 }
