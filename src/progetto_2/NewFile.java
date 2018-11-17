@@ -2,6 +2,7 @@ package progetto_2;
 
 import java.io.*;
 import java.security.*;
+import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -10,6 +11,7 @@ import java.util.Arrays;
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.security.sasl.AuthenticationException;
 
 
 public abstract class NewFile {
@@ -34,6 +36,7 @@ public abstract class NewFile {
     private File destinazione;
     private int kShare;
     private int nShare;
+    private String timestamp;
 
     public NewFile(String mittente, String destinatario, byte cifrario_m, byte cifrario_k, byte padding, byte integrita,
                    byte modi_operativi, byte tipo, byte dimensione_firma, File file, File destinazione, int kShare, int nShare) {
@@ -50,6 +53,7 @@ public abstract class NewFile {
         this.destinazione = destinazione;
         this.kShare = kShare;
         this.nShare = nShare;
+        this.timestamp = System.currentTimeMillis()+"";
         codifica();
     }
 
@@ -66,12 +70,12 @@ public abstract class NewFile {
 
     }
 
-    public static boolean decodifica(File file, File destinazione){
+    public static boolean decodifica(String nome, File file, File destinazione){
         try {
 
             FileInputStream fis = new FileInputStream(file);
             NewFile nf =  readHeader(fis);
-            boolean result = nf.completeDecode(fis,file,destinazione);
+            boolean result = nf.completeDecode(fis,nome,destinazione);
             return result;
 
         } catch(IOException | SignatureException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException | NoSuchPaddingException | IllegalBlockSizeException | InvalidAlgorithmParameterException e){
@@ -80,11 +84,11 @@ public abstract class NewFile {
 
     }
 
-    private boolean completeDecode(FileInputStream fis,File file, File destinazione) throws NoSuchPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidKeySpecException, InvalidAlgorithmParameterException, IOException, SignatureException {
+    private boolean completeDecode(FileInputStream fis,String nome, File destinazione) throws NoSuchPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidKeySpecException, InvalidAlgorithmParameterException, IOException, SignatureException {
         this.destinazione = destinazione;
         SharesRing sr = SharesRing.getInstance();
-        kr = sr.rebuild(file.getName());
-        SecretKey secretKey = rebuildSecretKey();
+        kr = sr.rebuild(mittente,destinatario,nome);
+        SecretKey secretKey = rebuildSecretKey(fis);
         Cipher cipher = getCipher(secretKey);
         byte[] verifier = readVerifier(fis);
         getVerifier();
@@ -131,12 +135,13 @@ public abstract class NewFile {
 
     protected abstract void updateVerifier(byte[] c) throws SignatureException;
 
-    protected abstract void getVerifier() throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException;
+    protected abstract void getVerifier() throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException, AuthenticationException;
 
     protected abstract byte[] readVerifier(FileInputStream fis) throws IOException;
 
-    private SecretKey rebuildSecretKey() throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        byte[] secretKey = kr.getKey("Secret");
+    private SecretKey rebuildSecretKey(FileInputStream fis) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, IOException {
+        //byte[] secretKey = kr.getKey("Secret");
+
 
 
         //decodifica chiave tramite RSA e privateRSAKey;
@@ -149,6 +154,11 @@ public abstract class NewFile {
         Cipher cipherkey = Cipher.getInstance("RSA/ECB/" + Match.padding.get(this.padding) + "Padding");
         cipherkey.init(Cipher.DECRYPT_MODE, privateKey);
 
+
+        RSAPrivateKey rpk = (RSAPrivateKey) privateKey;
+        int byteLength = rpk.getModulus().bitLength()/8;
+        byte[] secretKey = new byte[byteLength];
+        fis.readNBytes(secretKey,0,byteLength);
         System.out.println("lunghezza chiave des aes " + secretKey.length + "\n" + secretKey[0]);
 
         System.out.println(" ");
@@ -207,7 +217,7 @@ public abstract class NewFile {
 
     public void codifica() {
         try {
-            kr = new KeyRing(destinazione.getName());
+            kr = SharesRing.getInstance().rebuild(mittente,destinatario,file.getName()+timestamp);
             FileOutputStream os = new FileOutputStream(destinazione);
             //Genera chiave segreta per il messaggio
             SecretKey secretKey = generateSecretKey();
@@ -216,10 +226,11 @@ public abstract class NewFile {
             //header messaggio cifrato, generazione iv e salt
             ArrayList<Byte> bytes = generateHeader();
             os.write(Utils.toByteArray(bytes));
-            int tot = bytes.size();
-            //cifra la chiave segreta
-            encryptSecretKey(secretKey);
 
+            //cifra la chiave segreta
+            byte[] secretKeyBytes = encryptSecretKey(secretKey);
+            os.write(secretKeyBytes);
+            int tot = bytes.size()+secretKeyBytes.length;
             //inizializza cifrario messaggio
 
             if (modo_operativo == (byte) 0x00) {
@@ -235,8 +246,19 @@ public abstract class NewFile {
             os.flush();
             os.close();
 
+            FileInputStream fisdebug = new FileInputStream(destinazione);
+            byte[] readall = fisdebug.readAllBytes();
+            System.out.println("Stampa codifica\n");
+            for(byte b: readall){
+                System.out.print(b+ " ");
+            }
+            System.out.println();
+            fisdebug.close();
+
+
             //salva keyring
-            kr.saveShamir(kShare, nShare);
+            kr.saveShamir(mittente,destinatario,kShare, nShare);
+            MessageShare.getInstance().shareFile(mittente,destinatario,file.getName()+timestamp,destinazione,kShare,nShare);
         }catch(IOException | SignatureException | InvalidKeySpecException | NoSuchAlgorithmException | BadPaddingException | InvalidKeyException | NoSuchPaddingException | InvalidAlgorithmParameterException | IllegalBlockSizeException e){
             throw new RuntimeException(e);
         }
@@ -254,8 +276,10 @@ public abstract class NewFile {
     private void writeVerifier(int tot,byte[] verifier) throws IOException {
 
         System.out.print("\ncodifica\n");
-        RandomAccessFile file1 = new RandomAccessFile("codificato.txt", "rw");
-        file1.seek(tot);
+        RandomAccessFile file1 = new RandomAccessFile(destinazione, "rw");
+        for (int p = 0; p < tot; p++) {
+            byte c = file1.readByte();
+        }
         file1.write(verifier);
         file1.close();
     }
@@ -289,7 +313,7 @@ public abstract class NewFile {
     protected abstract void createVerifier(FileOutputStream os) throws IOException, InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException;
 
 
-    private void encryptSecretKey(SecretKey secretKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchPaddingException {
+    private byte[] encryptSecretKey(SecretKey secretKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchPaddingException, AuthenticationException {
         //cifrario RSA
         Cipher cipherkey = Cipher.getInstance("RSA/ECB/" + Match.padding.get(this.padding) + "Padding");
 
@@ -305,7 +329,8 @@ public abstract class NewFile {
 
         System.out.println(" ");
 
-        kr.saveKey(cypherkey, "Secret");
+
+        return cypherkey;
     }
 
     private ArrayList<Byte> generateHeader() throws UnsupportedEncodingException {
@@ -368,9 +393,9 @@ public abstract class NewFile {
             KeyPair k = gen.generateKeyPair();
             Key publickey = k.getPublic();
             Key privatekey = k.getPrivate();
-
             kr.saveKey(publickey.getEncoded(), type + "Public");
             kr.saveKey(privatekey.getEncoded(), type + "Private");
+
             return kr;
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Algoritmo: " + type, e);

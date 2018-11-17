@@ -4,6 +4,7 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.security.sasl.AuthenticationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -38,7 +39,7 @@ public class CodificaMAC  extends NewFile{
     }
 
     @Override
-    protected void getVerifier() throws InvalidKeyException, NoSuchAlgorithmException {
+    protected void getVerifier() throws InvalidKeyException, NoSuchAlgorithmException, AuthenticationException {
         mac = Mac.getInstance(Match.tipo.get(this.tipo));
         SecretKeySpec macKey = new SecretKeySpec(kr.getKey("MAC"), mac.getAlgorithm());
         mac.init(macKey);

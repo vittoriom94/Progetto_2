@@ -116,8 +116,9 @@ public class Utils {
     }
 
     public static void deleteData() {
-
+        MessageShare.getInstance().clear();
         SharesRing.getInstance().clear();
+
 
 
         Path directory = Paths.get("server/");
@@ -164,9 +165,9 @@ public class Utils {
         FileInputStream fis = new FileInputStream(new File("prova.txt"));
         FileOutputStream fos = new FileOutputStream(new File("provaOUT.txt"));
 
-        MessageShare ms = new MessageShare(3,5);
-        ms.shareFile("prova.txt", fis);
-        ms.rebuilfFile("prova.txt", fos);
+        MessageShare ms = new MessageShare();
+        //ms.shareFile("prova.txt", fis);
+        //ms.rebuilfFile("prova.txt", fos);
 
     }
 }

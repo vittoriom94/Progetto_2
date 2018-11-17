@@ -1,8 +1,5 @@
 package progetto_2;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -10,9 +7,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.*;
-import java.math.BigInteger;
-import java.security.*;
-import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,19 +30,19 @@ public class GUI {
     private JRadioButton MACRadio;
     private JRadioButton HashRadio;
     private JPanel panelMain;
-    private JButton decFileChooseButton;
     private JButton decodificaButton;
     private JButton generaPrimoButton;
     private JButton generaRSAButton;
     private JComboBox sharesBox;
     private JComboBox sharesMinBox;
     private JButton pulisciKeyringButton;
-    private JList list1;
+    private JList filesList;
     private JButton generaFirmaButton;
     private JOptionPane text;
 
     private File codificaFile = null;
-    private File decodificaFile = null;
+
+    private ArrayList<Identifier> identifiers = new ArrayList<>();
 
 
     public GUI() {
@@ -97,6 +92,9 @@ public class GUI {
         sharesMinBox.setModel(new DefaultComboBoxModel<>(new String[]{"1", "2", "3", "4", "5", "6", "7", "8",}));
         sharesMinBox.setSelectedIndex(2);
 
+        identifiers.addAll(MessageShare.getInstance().getIdentifiers());
+        filesList.setListData(identifiers.toArray());
+
         firmaRadio.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -140,43 +138,34 @@ public class GUI {
                 }
             }
         });
-        decFileChooseButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
-                fc.setSelectedFile(new File("codificato.txt"));
-
-
-                int returnValue = fc.showOpenDialog(null);
-
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
-                    decodificaFile = fc.getSelectedFile();
-                }
-            }
-        });
         decodificaButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (decodificaFile != null) {
-                    // decodifica
 
-                    JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
-                    fc.setSelectedFile(new File("decodificato.txt"));
-
-
-                    int returnValue = fc.showSaveDialog(null);
-
-                    if (returnValue == JFileChooser.APPROVE_OPTION) {
-                        File destinationFile = fc.getSelectedFile();
-                        boolean result = NewFile.decodifica(decodificaFile, destinationFile);
-                        if (result == true)
-                            JOptionPane.showMessageDialog(null, "Messaggio corretto");
-                        else
-                            JOptionPane.showMessageDialog(null, "Messaggio non corretto");
-                    }
-
-
+                File decodificaFile = new File("tempDecodifica");
+                if (filesList.getSelectedIndex() == -1) {
+                    return;
                 }
+                Identifier id = identifiers.get(filesList.getSelectedIndex());
+                MessageShare.getInstance().rebuildFile(id, decodificaFile);
+                // decodifica
+
+                JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
+                fc.setSelectedFile(new File("decodificato.txt"));
+
+
+                int returnValue = fc.showSaveDialog(null);
+
+                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                    File destinationFile = fc.getSelectedFile();
+                    boolean result = NewFile.decodifica(id.getNome(), decodificaFile, destinationFile);
+                    if (result == true)
+                        JOptionPane.showMessageDialog(null, "Messaggio corretto");
+                    else
+                        JOptionPane.showMessageDialog(null, "Messaggio non corretto");
+                }
+
+
             }
         });
 
@@ -193,7 +182,7 @@ public class GUI {
             public void actionPerformed(ActionEvent e) {
                 //genera rsa
                 KeyRing kr = NewFile.createKeyPair((byte) dimRSASelect.getSelectedIndex(), "RSA", null);
-                kr.saveShamir(sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
+                kr.saveShamir(mittenteText.getText(), destinatarioText.getText(), sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
 
             }
         });
@@ -253,7 +242,7 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 KeyRing kr = NewFile.createKeyPair((byte) dimDSASelect.getSelectedIndex(), "DSA", null);
-                kr.saveShamir(sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
+                kr.saveShamir(mittenteText.getText(), destinatarioText.getText(), sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
             }
         });
     }
@@ -280,16 +269,12 @@ public class GUI {
     }
 
     private void codificaActionPerformed(ActionEvent evt) {
-        JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
-        fc.setSelectedFile(new File("codificato.txt"));
 
 
-        int returnValue = fc.showSaveDialog(null);
-
-        if (codificaFile == null || returnValue != JFileChooser.APPROVE_OPTION) {
+        if (codificaFile == null) {
             return;
         }
-        File destinationFile = fc.getSelectedFile();
+        File destinationFile = new File("tempCodifica");
         String mittente = mittenteText.getText();
         String destinatario = destinatarioText.getText();
         byte cifrario_m = (byte) codificaMSelect.getSelectedIndex();
@@ -321,6 +306,9 @@ public class GUI {
                     cifrario_k_dim, padding, integrita, modi_operativi, type, dimFirma, codificaFile, destinationFile, sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
 
         }
+        identifiers.clear();
+        identifiers.addAll(MessageShare.getInstance().getIdentifiers());
+        filesList.setListData(identifiers.toArray());
     }
 
 
@@ -554,41 +542,34 @@ public class GUI {
         final JPanel panel2 = new JPanel();
         panel2.setLayout(new GridBagLayout());
         tabbedPane1.addTab("Decodifica", panel2);
-        decFileChooseButton = new JButton();
-        decFileChooseButton.setText("Scegli File");
-        gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel2.add(decFileChooseButton, gbc);
         decodificaButton = new JButton();
         decodificaButton.setText("Decodifica");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridy = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel2.add(decodificaButton, gbc);
         final JPanel spacer6 = new JPanel();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.VERTICAL;
+        panel2.add(spacer6, gbc);
+        final JPanel spacer7 = new JPanel();
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.weightx = 2.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel2.add(spacer6, gbc);
-        final JPanel spacer7 = new JPanel();
-        gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.weighty = 1.0;
-        gbc.fill = GridBagConstraints.VERTICAL;
         panel2.add(spacer7, gbc);
-        list1 = new JList();
+        filesList = new JList();
         gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridx = 1;
+        gbc.gridy = 1;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
-        panel2.add(list1, gbc);
+        panel2.add(filesList, gbc);
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridBagLayout());
         tabbedPane1.addTab("Configurazione", panel3);
@@ -609,7 +590,7 @@ public class GUI {
         final JPanel spacer9 = new JPanel();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 12;
+        gbc.gridy = 11;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.VERTICAL;
         panel3.add(spacer9, gbc);
@@ -638,48 +619,41 @@ public class GUI {
         label8.setText("Numero di share");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 7;
         gbc.anchor = GridBagConstraints.WEST;
         panel3.add(label8, gbc);
         final JLabel label9 = new JLabel();
         label9.setText("Numero di share minime");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 6;
+        gbc.gridy = 9;
         gbc.anchor = GridBagConstraints.WEST;
         panel3.add(label9, gbc);
         sharesBox = new JComboBox();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 8;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel3.add(sharesBox, gbc);
         sharesMinBox = new JComboBox();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 7;
+        gbc.gridy = 10;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel3.add(sharesMinBox, gbc);
-        pulisciKeyringButton = new JButton();
-        pulisciKeyringButton.setText("Pulisci Keyring");
-        gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 8;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel3.add(pulisciKeyringButton, gbc);
         final JLabel label10 = new JLabel();
         label10.setText("Dimensione Firma");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 9;
+        gbc.gridy = 4;
         gbc.anchor = GridBagConstraints.WEST;
         panel3.add(label10, gbc);
         dimDSASelect = new JComboBox();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 10;
+        gbc.gridy = 5;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel3.add(dimDSASelect, gbc);
@@ -687,9 +661,16 @@ public class GUI {
         generaFirmaButton.setText("Genera Firma");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 11;
+        gbc.gridy = 6;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel3.add(generaFirmaButton, gbc);
+        pulisciKeyringButton = new JButton();
+        pulisciKeyringButton.setText("Svuota Keyring");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 10;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel3.add(pulisciKeyringButton, gbc);
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new BorderLayout(0, 0));
         panelMain.add(panel4, BorderLayout.SOUTH);

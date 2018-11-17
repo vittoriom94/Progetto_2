@@ -3,6 +3,7 @@ package progetto_2;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.security.sasl.AuthenticationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -41,7 +42,7 @@ public class CodificaSign extends NewFile{
     }
 
     @Override
-    protected void getVerifier() throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException {
+    protected void getVerifier() throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException, AuthenticationException {
         X509EncodedKeySpec ks2 = new X509EncodedKeySpec(kr.getKey("DSAPublic"));
         KeyFactory kf2 = KeyFactory.getInstance("DSA");
         PublicKey publicKey = kf2.generatePublic(ks2);
@@ -83,7 +84,7 @@ public class CodificaSign extends NewFile{
     }
 
     @Override
-    protected void createVerifier(FileOutputStream os) throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException {
+    protected void createVerifier(FileOutputStream os) throws InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException, AuthenticationException {
 
             signature = Signature.getInstance(Match.tipo.get(tipo));
 

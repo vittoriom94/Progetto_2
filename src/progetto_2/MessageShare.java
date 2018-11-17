@@ -4,8 +4,6 @@ import java.io.*;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 /**
@@ -13,31 +11,31 @@ import java.util.logging.Logger;
  * @author carmineannunziata
  */
 public class MessageShare implements Serializable {
-
-    byte[] file;  //file in byte
-    //HashMap<Integer, byte[]> block_file = new HashMap<>(); // file in blocchi di byte (id_blocco - byte_blocco)
-    //Map<BigInteger, BigInteger> shares = new HashMap<>();  // id_share - val_share
-    //Map<BigInteger,Map<BigInteger, BigInteger>> files= new HashMap<>(); // id_blocco - ( Map(id_share - val_share) )
-    //Map<BigInteger,String> id_servers= new HashMap(); // id_server - nomerandomfile
-    //Map<BigInteger,Map<BigInteger,String>> serversMap= new HashMap<>(); // id_blocco - ( Map(id_server - nomerandomfile) )
-    //BigInteger s;
-
-
     //string chiave: identificativo file   n-blocco
-    private HashMap<String, HashMap<Integer, HashMap<Integer, ShareEntry>>> mapFiles = new HashMap<>();
+    private HashMap<Identifier, HashMap<Integer, HashMap<Integer, ShareEntry>>> mapFiles = new HashMap<>();
+    private transient static MessageShare instance = null;
+    private transient File[] servers;
 
-    private int k;
-    private int n;
-    private transient SecretSharing sc;
+    private transient SecretSharing sh;
 
-    public MessageShare(int k,int n){
-        sc = SharesRing.getInstance().getShamir();
-        this.k=k;
-        this.n=n;
-
+    protected MessageShare(){
     }
 
-    public void shareFile(String nome, FileInputStream fis) throws IOException {
+    public static MessageShare getInstance(){
+        if (instance == null) {
+            MessageShare ms = MessageShare.loadMessageShare();
+            instance = Objects.requireNonNullElseGet(ms,MessageShare::new);
+            instance.saveInstance();
+        }
+        instance.servers = Utils.getServers();
+        return instance;
+    }
+
+    public void shareFile(String mittente, String destinatario, String nome, File file,int k,int n) throws IOException {
+        if(sh == null){
+            sh = SharesRing.getInstance().getShamir();
+        }
+        FileInputStream fis = new FileInputStream(file);
         byte[] buffer = new byte[Const.BUFFER];
         int block = Const.BUFFER;
         int i = 0;
@@ -51,19 +49,20 @@ public class MessageShare implements Serializable {
                 for (int p = 0; p < buffer2.length; p++)
                     buffer2[p] = buffer[p];
                 //do something buffer2
-                shares = (HashMap<BigInteger, BigInteger>) genBlock(buffer2);
+                shares = (HashMap<BigInteger, BigInteger>) genBlock(buffer2,  k,  n);
 
             } else {
                 //do something buffer
-                shares = (HashMap<BigInteger, BigInteger>) genBlock(buffer);
+                shares = (HashMap<BigInteger, BigInteger>) genBlock(buffer, k, n);
 
             }
-
-            distribute(nome, shares,i);
+            Identifier id = new Identifier(mittente,destinatario,nome,k,"");
+            distribute(id, shares,i);
             i++;
             //ho creato lo share, le ho distribuite e ho salvato i dati in map files
 
         }
+        fis.close();
 
         //Salva file su disco
         saveInstance();
@@ -71,13 +70,12 @@ public class MessageShare implements Serializable {
 
     //converte i blocchi in biginteger e li passa a Shamir per generare le share
 
-    public Map<BigInteger, BigInteger> genBlock(byte[] block){
+    private Map<BigInteger, BigInteger> genBlock(byte[] block,int k, int n){
         BigInteger s= Utils.getBigInteger(block);
-        return sc.genShares(s,k,n);
+        return sh.genShares(s,k,n);
     }
 
-    public void distribute(String nome, HashMap<BigInteger, BigInteger> shares, int i) throws IOException {
-        File[] servers = Utils.getServers(); //di classe?
+    private void distribute(Identifier id, HashMap<BigInteger, BigInteger> shares, int i) throws IOException {
         HashMap<Integer, ShareEntry> temp1 = new HashMap<>();
         for (BigInteger bi : shares.keySet()) {
             File tempfile;
@@ -98,9 +96,9 @@ public class MessageShare implements Serializable {
             //salva nella hashmap da scrivere
             temp1.put(bi.intValue(), new ShareEntry(nomeShare, shares.get(bi).hashCode()));
         }
-        HashMap<Integer, HashMap<Integer, ShareEntry>>  val = mapFiles.getOrDefault(nome, new HashMap<>());
+        HashMap<Integer, HashMap<Integer, ShareEntry>>  val = mapFiles.getOrDefault(id, new HashMap<>());
         val.put(i,temp1); //unire?
-        mapFiles.put(nome,val);
+        mapFiles.put(id,val);
     }
     private void saveInstance() {
         try {
@@ -116,40 +114,53 @@ public class MessageShare implements Serializable {
         }
     }
 
-    public void rebuilfFile(String nome, FileOutputStream fos) throws IOException {
-        //a parte, devo caricarmi l'istanza della classe, qui mapFiles è già popolato
-        //itera su mapfiles.get(nome)
-        //ricostruisci segreto
-        //scrivi segreto
-        File[] servers = Utils.getServers();
-        HashMap<Integer, HashMap<Integer, ShareEntry>> temp  = mapFiles.get(nome);//Dividere nome in nome+k!!!
+    public void rebuildFile(Identifier id, File file)  {
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            if (sh == null) {
+                sh = SharesRing.getInstance().getShamir();
+            }
+            //a parte, devo caricarmi l'istanza della classe, qui mapFiles è già popolato
+            //itera su mapfiles.get(nome)
+            //ricostruisci segreto
+            //scrivi segreto
+            HashMap<Integer, HashMap<Integer, ShareEntry>> temp = mapFiles.get(id);//Dividere nome in nome+k!!!
 
-        int minshares = 3;//!!!!
-        for(int i=0;i<temp.size();i++){
-            HashMap<Integer, ShareEntry> block = temp.get(i);
-            HashMap<BigInteger, BigInteger> shares = new HashMap<>();
-            int k = 0;
-
-            for (Map.Entry e : block.entrySet()) {
-
-                byte[] share = SharesRing.getShare(((ShareEntry) e.getValue()).getFile(), servers[(Integer) e.getKey() - 1]);
-
-                if (share != null) {
-                    BigInteger shareValue = new BigInteger(share);
-                    boolean checkHash = shareValue.hashCode() == ((ShareEntry) e.getValue()).getHash();
-                    if (checkHash) {
-                        shares.put(BigInteger.valueOf((int) e.getKey()), shareValue);
-                        k++;
-                    }
+            int minshares = 0;
+            for (Identifier id2 : mapFiles.keySet()) {
+                if (id.equals(id2)) {
+                    minshares = id2.getK();
+                    break;
                 }
             }
-            if(k<minshares){
-                throw new NotEnoughSharesException(nome, minshares);
+            for (int i = 0; i < temp.size(); i++) {
+                HashMap<Integer, ShareEntry> block = temp.get(i);
+                HashMap<BigInteger, BigInteger> shares = new HashMap<>();
+                int k = 0;
+
+                for (Map.Entry e : block.entrySet()) {
+
+                    byte[] share = SharesRing.getShare(((ShareEntry) e.getValue()).getFile(), servers[(Integer) e.getKey() - 1]);
+
+                    if (share != null) {
+                        BigInteger shareValue = new BigInteger(share);
+                        boolean checkHash = shareValue.hashCode() == ((ShareEntry) e.getValue()).getHash();
+                        if (checkHash) {
+                            shares.put(BigInteger.valueOf((int) e.getKey()), shareValue);
+                            k++;
+                        }
+                    }
+                }
+                if (k < minshares) {
+                    throw new NotEnoughSharesException(id.getNome(), minshares);
+                }
+                BigInteger secret = sh.getSecret(shares);
+                writeBlock(fos, secret);
             }
-            BigInteger secret = sc.getSecret(shares);
-            writeBlock(fos, secret);
+            fos.close();
+        } catch(IOException e){
+            throw new RuntimeException(e);
         }
-        fos.close();
     }
 
     private void writeBlock(FileOutputStream fos, BigInteger secret) {
@@ -160,16 +171,16 @@ public class MessageShare implements Serializable {
         }
     }
 
-    private static SharesRing loadMessageShare() {
-        SharesRing sr = null;
+    private static MessageShare loadMessageShare() {
+        MessageShare ms = null;
         if (!Const.MESSAGEFILE.exists()) {
-            return sr;
+            return ms;
         }
         try {
 
             FileInputStream fis = new FileInputStream(Const.MESSAGEFILE);
             ObjectInputStream ois = new ObjectInputStream(fis);
-            sr = (SharesRing) ois.readObject();
+            ms = (MessageShare) ois.readObject();
             ois.close();
             fis.close();
         } catch (IOException e) {
@@ -179,9 +190,17 @@ public class MessageShare implements Serializable {
             throw new RuntimeException("Il file messageRing è corrotto.", e);
         }
 
-        return sr;
+        return ms;
     }
 
+    public void clear() {
+        this.mapFiles = new HashMap<>();
+        saveInstance();
+    }
+
+    public Set<Identifier> getIdentifiers(){
+        return mapFiles.keySet();
+    }
 
 }
 
