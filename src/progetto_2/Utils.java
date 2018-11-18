@@ -170,5 +170,20 @@ public class Utils {
         //ms.rebuilfFile("prova.txt", fos);
 
     }
+
+    public static void printFile(File file){
+        try {
+            FileInputStream fisdebug = new FileInputStream(file);
+            byte[] readall = fisdebug.readAllBytes();
+            System.out.println("Stampa debug " + file.getName() + "\n");
+            for (byte b : readall) {
+                System.out.print(b + " ");
+            }
+            System.out.println();
+            fisdebug.close();
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+    }
 }
 

@@ -161,9 +161,12 @@ public class GUI {
                     boolean result = NewFile.decodifica(id.getNome(), decodificaFile, destinationFile);
                     if (result == true)
                         JOptionPane.showMessageDialog(null, "Messaggio corretto");
-                    else
+                    else {
+                        destinationFile.delete();
                         JOptionPane.showMessageDialog(null, "Messaggio non corretto");
+                    }
                 }
+
 
 
             }

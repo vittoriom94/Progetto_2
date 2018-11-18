@@ -101,10 +101,10 @@ public class CodificaSign extends NewFile{
     @Override
     protected void handleMessage(Cipher cipher, FileOutputStream os, int tot) throws IOException, BadPaddingException, IllegalBlockSizeException, InvalidKeySpecException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
         createVerifier(os);
-        bufferReadEncode(os, cipher);
+        bufferReadEncode(os, cipher, new FileInputStream(file));
         byte[] verifier = completeVerifier();
         os.write(verifier);
-        bufferReadEncode(os, cipher);
+        bufferReadEncode(os, cipher,new FileInputStream(file));
         os.write(cipher.doFinal());
 
     }

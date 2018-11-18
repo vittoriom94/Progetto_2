@@ -33,12 +33,12 @@ public class MessageShare implements Serializable {
             sh = SharesRing.getInstance().getShamir();
         }
         FileInputStream fis = new FileInputStream(file);
-        byte[] buffer = new byte[Const.BUFFER];
-        int block = Const.BUFFER;
+        byte[] buffer = new byte[Const.BUFFERMESSAGE];
+        int block = Const.BUFFERMESSAGE;
         int i = 0;
         HashMap<BigInteger, BigInteger> shares;
 
-        while (block == Const.BUFFER) {
+        while (block == Const.BUFFERMESSAGE) {
             block = fis.readNBytes(buffer, 0, block);
 
             if (block != 8) {

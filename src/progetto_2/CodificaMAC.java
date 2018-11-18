@@ -1,8 +1,6 @@
 package progetto_2;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.Mac;
+import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.sasl.AuthenticationException;
 import java.io.File;
@@ -12,6 +10,8 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
 public class CodificaMAC  extends NewFile{
@@ -58,6 +58,15 @@ public class CodificaMAC  extends NewFile{
     }
 
     @Override
+    protected void handleMessage(Cipher cipher, FileOutputStream os, int tot) throws IOException, BadPaddingException, IllegalBlockSizeException, InvalidKeySpecException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
+        createVerifier(os);
+        bufferReadEncode(os, cipher,new FileInputStream(file));
+        os.write(cipher.doFinal());
+        byte[] verifier = completeVerifier();
+        writeVerifier(tot,verifier);
+    }
+
+    @Override
     protected byte[] completeVerifier() {
         return mac.doFinal();
     }
@@ -88,4 +97,5 @@ public class CodificaMAC  extends NewFile{
 
 
     }
+
 }
