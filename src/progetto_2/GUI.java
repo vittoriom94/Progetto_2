@@ -8,6 +8,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -93,6 +95,8 @@ public class GUI {
         sharesMinBox.setSelectedIndex(2);
 
         identifiers.addAll(MessageShare.getInstance().getIdentifiers());
+        Collections.sort(identifiers);
+        Collections.reverse(identifiers);
         filesList.setListData(identifiers.toArray());
 
         firmaRadio.addActionListener(new ActionListener() {
@@ -310,6 +314,8 @@ public class GUI {
         }
         identifiers.clear();
         identifiers.addAll(MessageShare.getInstance().getIdentifiers());
+        Collections.sort(identifiers);
+        Collections.reverse(identifiers);
         filesList.setListData(identifiers.toArray());
     }
 
@@ -538,7 +544,7 @@ public class GUI {
         final JPanel spacer6 = new JPanel();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 1;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.VERTICAL;
         panel2.add(spacer6, gbc);
@@ -549,13 +555,14 @@ public class GUI {
         gbc.weightx = 2.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel2.add(spacer7, gbc);
-        filesList = new JList();
+        final JScrollPane scrollPane1 = new JScrollPane();
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 1;
-        gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
-        panel2.add(filesList, gbc);
+        panel2.add(scrollPane1, gbc);
+        filesList = new JList();
+        scrollPane1.setViewportView(filesList);
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridBagLayout());
         tabbedPane1.addTab("Configurazione", panel3);

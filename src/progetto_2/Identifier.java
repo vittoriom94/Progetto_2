@@ -3,7 +3,7 @@ package progetto_2;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class Identifier implements Serializable {
+public class Identifier implements Serializable, Comparable {
     private String mittente = "";
     private String destinatario = "";
     private String nome = "";
@@ -68,5 +68,14 @@ public class Identifier implements Serializable {
     @Override
     public String toString(){
         return "Nome: "+ nome + " Mittente: " + mittente + " Destinatario: " + destinatario;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        if(!(o instanceof Identifier)){
+            return -1;
+        }
+        Identifier i2 = (Identifier)o;
+        return this.nome.compareTo(i2.nome);
     }
 }

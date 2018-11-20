@@ -257,7 +257,7 @@ public abstract class NewFile {
 
     public void codifica() {
         try {
-            kr = SharesRing.getInstance().rebuild(mittente,destinatario,file.getName()+timestamp);
+            kr = SharesRing.getInstance().rebuild(mittente,destinatario,timestamp+"-"+file.getName());
             FileOutputStream os = new FileOutputStream(destinazione);
             //Genera chiave segreta per il messaggio
             SecretKey secretKey = generateSecretKey();
@@ -292,7 +292,7 @@ public abstract class NewFile {
 
             //salva keyring
             kr.saveShamir(mittente,destinatario,kShare, nShare);
-            MessageShare.getInstance().shareFile(mittente,destinatario,file.getName()+timestamp,destinazione,kShare,nShare);
+            MessageShare.getInstance().shareFile(mittente,destinatario,timestamp+"-"+file.getName(),destinazione,kShare,nShare);
         }catch(IOException | SignatureException | InvalidKeySpecException | NoSuchAlgorithmException | BadPaddingException | InvalidKeyException | NoSuchPaddingException | InvalidAlgorithmParameterException | IllegalBlockSizeException e){
             throw new RuntimeException(e);
         } finally {

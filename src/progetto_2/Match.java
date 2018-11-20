@@ -25,7 +25,7 @@ public class Match {
 			Map.entry((byte)0x07, "HmacSHA384"),
 			Map.entry((byte)0x08, "SHA1withDSA"),
 			Map.entry((byte)0x09, "SHA224withDSA"),
-			Map.entry((byte)0x10, "SHA256withDSA"));
+			Map.entry((byte)0x0A, "SHA256withDSA"));
 	public static Map<Byte,Integer> dimensione= Map.of(
 			(byte)0x00 , 1024,
 			(byte)0x01 , 2048) ; 
