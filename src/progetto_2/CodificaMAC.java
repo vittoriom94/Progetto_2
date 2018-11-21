@@ -14,7 +14,7 @@ import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
-public class CodificaMAC  extends NewFile{
+public class CodificaMAC  extends Incapsula {
     private Mac mac;
     public CodificaMAC(String mittente, String destinatario, byte cifrario_m, byte cifrario_k, byte padding, byte integrita, byte modi_operativi, byte tipo, byte dimensione_firma, File file, File destinazione, int kShare, int nShare) {
         super(mittente, destinatario, cifrario_m, cifrario_k, padding, integrita, modi_operativi, tipo, dimensione_firma, file, destinazione, kShare, nShare);

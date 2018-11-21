@@ -12,10 +12,13 @@ public class MessageShare implements Serializable {
     private HashMap<Identifier, HashMap<Integer, HashMap<Integer, ShareEntry>>> mapFiles = new HashMap<>();
     private transient static MessageShare instance = null;
     private transient File[] servers;
+    private BigInteger p;
 
     private transient SecretSharing sh;
 
     protected MessageShare(){
+        System.out.println("Generazione primo per i file...");
+        this.p = SecretSharing.generatePrime(Const.BITLENGHTMESSAGE);
     }
 
     public static MessageShare getInstance(){
@@ -24,14 +27,12 @@ public class MessageShare implements Serializable {
             instance = Objects.requireNonNullElseGet(ms,MessageShare::new);
             instance.saveInstance();
         }
+        instance.sh = new SecretSharing(instance.p);
         instance.servers = Utils.getServers();
         return instance;
     }
 
     public void shareFile(String mittente, String destinatario, String nome, File file,int k,int n) throws IOException {
-        if(sh == null){
-            sh = SharesRing.getInstance().getShamir();
-        }
         FileInputStream fis = new FileInputStream(file);
         byte[] buffer = new byte[Const.BUFFERMESSAGE];
         int block = Const.BUFFERMESSAGE;
@@ -39,6 +40,7 @@ public class MessageShare implements Serializable {
         HashMap<BigInteger, BigInteger> shares;
 
         while (block == Const.BUFFERMESSAGE) {
+            System.out.println("blocco " + i);
             block = fis.readNBytes(buffer, 0, block);
 
             if (block != 8) {
@@ -114,14 +116,11 @@ public class MessageShare implements Serializable {
     public void rebuildFile(Identifier id, File file)  {
         try {
             FileOutputStream fos = new FileOutputStream(file);
-            if (sh == null) {
-                sh = SharesRing.getInstance().getShamir();
-            }
             //a parte, devo caricarmi l'istanza della classe, qui mapFiles è già popolato
             //itera su mapfiles.get(nome)
             //ricostruisci segreto
             //scrivi segreto
-            HashMap<Integer, HashMap<Integer, ShareEntry>> temp = mapFiles.get(id);//Dividere nome in nome+k!!!
+            HashMap<Integer, HashMap<Integer, ShareEntry>> temp = mapFiles.get(id);
 
             int minshares = 0;
             for (Identifier id2 : mapFiles.keySet()) {
@@ -131,10 +130,12 @@ public class MessageShare implements Serializable {
                 }
             }
             for (int i = 0; i < temp.size(); i++) {
+                System.out.println("blocco " + i + "/" + temp.size());
+                System.out.print("1");
                 HashMap<Integer, ShareEntry> block = temp.get(i);
                 HashMap<BigInteger, BigInteger> shares = new HashMap<>();
                 int k = 0;
-
+                System.out.print("2");
                 for (Map.Entry e : block.entrySet()) {
 
                     byte[] share = SharesRing.getShare(((ShareEntry) e.getValue()).getFile(), servers[(Integer) e.getKey() - 1]);
@@ -148,11 +149,15 @@ public class MessageShare implements Serializable {
                         }
                     }
                 }
+                System.out.print("3");
                 if (k < minshares) {
                     throw new NotEnoughSharesException(id.getNome(), minshares);
                 }
                 BigInteger secret = sh.getSecret(shares);
+                System.out.print("4");
                 writeBlock(fos, secret);
+                System.out.print("5");
+                System.out.println();
             }
             fos.close();
         } catch(IOException e){

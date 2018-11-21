@@ -24,6 +24,9 @@ public class Utils {
         names.add("OneDrive");
         names.add("Amazon");
         names.add("Aruba");
+        names.add("ServerPrivato1");
+        names.add("ServerPrivato2");
+        names.add("ServerPrivato3");
         int n = names.size();
         if(!Const.SERVERPATH.exists()){
             Const.SERVERPATH.mkdir();
@@ -80,7 +83,6 @@ public class Utils {
 
 
     public static ArrayList<Byte> toByteArrayNonprimitive(byte[] bytes){
-        System.out.println(bytes);
         ArrayList<Byte> bytesNP = new ArrayList<Byte>();
         for(byte b : bytes){
             bytesNP.add(b);
@@ -94,13 +96,6 @@ public class Utils {
             bytesArr[i] = (byte)ba.get(i);
         }
         return bytesArr;
-    }
-    public static String byteArrayToString(byte[] bytes){
-        String s = "";
-        for(byte b : bytes){
-            s=s+(char)b;
-        }
-        return s;
     }
 
 
@@ -140,38 +135,8 @@ public class Utils {
         }
     }
 
-    public static void testBiginteger(){
-        byte[] b1 = {0,-1,0,1,2,3,4,5};
-        byte[] b2 = {0,-1,0,-1,2,3,4,5};
-        byte[] b3 = {0,-1,0,0,2,3,4,5};
-        byte[] b4 = {0,-1,0,0,-2,3,4,5};
 
-        BigInteger bi1 = new BigInteger(1,b1);
-        BigInteger bi2 = new BigInteger(1,b2);
-        BigInteger bi3 = new BigInteger(1,b3);
-        BigInteger bi4 = new BigInteger(1,b4);
-
-        byte[] br1 = bi1.toByteArray();
-        byte[] br2 = bi2.toByteArray();
-        byte[] br3 = bi3.toByteArray();
-        byte[] br4 = bi4.toByteArray();
-
-
-        System.out.println();
-
-    }
-
-    public static void testMessageShare() throws IOException {
-        FileInputStream fis = new FileInputStream(new File("prova.txt"));
-        FileOutputStream fos = new FileOutputStream(new File("provaOUT.txt"));
-
-        MessageShare ms = new MessageShare();
-        //ms.shareFile("prova.txt", fis);
-        //ms.rebuilfFile("prova.txt", fos);
-
-    }
-
-    public static void printFile(File file){
+    public static void printFile(File file){/*
         try {
             FileInputStream fisdebug = new FileInputStream(file);
             byte[] readall = fisdebug.readAllBytes();
@@ -183,7 +148,7 @@ public class Utils {
             fisdebug.close();
         } catch(Exception e){
             e.printStackTrace();
-        }
+        }*/
     }
 }
 

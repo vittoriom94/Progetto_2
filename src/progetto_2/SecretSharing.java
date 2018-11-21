@@ -9,11 +9,6 @@ public class SecretSharing {
     private static final int C = 100;
     private BigInteger p;
 
-    public SecretSharing(int bitLength) {
-        this.bitLength = bitLength;
-        p = generatePrime(bitLength);
-    }
-
     public SecretSharing(BigInteger p ){
         this.p = p;
         bitLength = p.bitLength();
@@ -30,12 +25,12 @@ public class SecretSharing {
             if (pr.isProbablePrime(C)) {
                 value = true;
             }
-        } while (value == false);
+        } while (!value);
         return pr;
     }
 
 
-    public BigInteger randomZp() {
+    private BigInteger randomZp() {
         BigInteger r;
         do {
             r = new BigInteger(bitLength, new Random());

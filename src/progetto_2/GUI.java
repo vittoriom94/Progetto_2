@@ -8,7 +8,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -145,13 +144,9 @@ public class GUI {
         decodificaButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
-                File decodificaFile = new File("tempDecodifica");
                 if (filesList.getSelectedIndex() == -1) {
                     return;
                 }
-                Identifier id = identifiers.get(filesList.getSelectedIndex());
-                MessageShare.getInstance().rebuildFile(id, decodificaFile);
                 // decodifica
 
                 JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
@@ -161,9 +156,14 @@ public class GUI {
                 int returnValue = fc.showSaveDialog(null);
 
                 if (returnValue == JFileChooser.APPROVE_OPTION) {
+
+                    File decodificaFile = new File("tempDecodifica");
+
+                    Identifier id = identifiers.get(filesList.getSelectedIndex());
+                    MessageShare.getInstance().rebuildFile(id, decodificaFile);
                     File destinationFile = fc.getSelectedFile();
-                    boolean result = NewFile.decodifica(id.getNome(), decodificaFile, destinationFile);
-                    if (result == true)
+                    boolean result = Incapsula.decodifica(id.getNome(), decodificaFile, destinationFile);
+                    if (result)
                         JOptionPane.showMessageDialog(null, "Messaggio corretto");
                     else {
                         destinationFile.delete();
@@ -180,6 +180,7 @@ public class GUI {
             public void actionPerformed(ActionEvent e) {
                 // genera primo
                 SharesRing.getInstance();
+                MessageShare.getInstance();
 
             }
         });
@@ -187,7 +188,7 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //genera rsa
-                KeyRing kr = NewFile.createKeyPair((byte) dimRSASelect.getSelectedIndex(), "RSA", null);
+                KeyRing kr = Incapsula.createKeyPair((byte) dimRSASelect.getSelectedIndex(), "RSA", null);
                 kr.saveShamir(mittenteText.getText(), destinatarioText.getText(), sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
 
             }
@@ -247,7 +248,7 @@ public class GUI {
         generaFirmaButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                KeyRing kr = NewFile.createKeyPair((byte) dimDSASelect.getSelectedIndex(), "DSA", null);
+                KeyRing kr = Incapsula.createKeyPair((byte) dimDSASelect.getSelectedIndex(), "DSA", null);
                 kr.saveShamir(mittenteText.getText(), destinatarioText.getText(), sharesMinBox.getSelectedIndex() + 1, sharesBox.getSelectedIndex() + 1);
             }
         });

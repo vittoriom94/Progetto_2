@@ -14,7 +14,7 @@ import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
-public class CodificaHash extends NewFile{
+public class CodificaHash extends Incapsula {
     private MessageDigest digest;
     private boolean signed;
     private boolean concat;

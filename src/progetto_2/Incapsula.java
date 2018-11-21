@@ -14,7 +14,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.security.sasl.AuthenticationException;
 
 
-public abstract class NewFile {
+public abstract class Incapsula {
     private String mittente;
     private String destinatario;
     private byte cifrario_m;//00 AES ; 01 DES ; 02 TRIPLEDES
@@ -38,8 +38,8 @@ public abstract class NewFile {
     private int nShare;
     private String timestamp;
 
-    public NewFile(String mittente, String destinatario, byte cifrario_m, byte cifrario_k, byte padding, byte integrita,
-                   byte modi_operativi, byte tipo, byte dimensione_firma, File file, File destinazione, int kShare, int nShare) {
+    public Incapsula(String mittente, String destinatario, byte cifrario_m, byte cifrario_k, byte padding, byte integrita,
+                     byte modi_operativi, byte tipo, byte dimensione_firma, File file, File destinazione, int kShare, int nShare) {
         this.mittente = mittente;
         this.destinatario = destinatario;
         this.cifrario_m = cifrario_m;
@@ -57,7 +57,7 @@ public abstract class NewFile {
         codifica();
     }
 
-    public NewFile(String mittente, String destinatario, byte cifrario_m, byte cifrario_k, byte padding, byte integrita, byte modo_operativo, byte tipo, byte dimensione_firma, byte[] salt, byte[] iv) {
+    public Incapsula(String mittente, String destinatario, byte cifrario_m, byte cifrario_k, byte padding, byte integrita, byte modo_operativo, byte tipo, byte dimensione_firma, byte[] salt, byte[] iv) {
         this.mittente = mittente;
         this.destinatario = destinatario;
         this.cifrario_m = cifrario_m;
@@ -77,7 +77,7 @@ public abstract class NewFile {
 
             Utils.printFile(file);
             FileInputStream fis = new FileInputStream(file);
-            NewFile nf =  readHeader(fis);
+            Incapsula nf =  readHeader(fis);
 
             boolean result = nf.completeDecode(fis,nome,destinazione);
             return result;
@@ -201,15 +201,13 @@ public abstract class NewFile {
         int byteLength = rpk.getModulus().bitLength()/8;
         byte[] secretKey = new byte[byteLength];
         fis.readNBytes(secretKey,0,byteLength);
-        System.out.println("lunghezza chiave des aes " + secretKey.length + "\n" + secretKey[0]);
 
-        System.out.println(" ");
         byte[] secretKeyDecodedByte = cipherkey.doFinal(secretKey);
 
         return new SecretKeySpec(secretKeyDecodedByte, 0, secretKeyDecodedByte.length, Match.cifrario_m.get(this.cifrario_m));
     }
 
-    private static NewFile readHeader(FileInputStream fis) throws IOException {
+    private static Incapsula readHeader(FileInputStream fis) throws IOException {
         byte sl = (byte) Const.MESSAGESEPARATOR.charAt(0);
         ArrayList<byte[]> params = new ArrayList<>();
         int num = 2;
@@ -305,7 +303,6 @@ public abstract class NewFile {
 
     protected void writeVerifier(int tot,byte[] verifier) throws IOException {
 
-        System.out.print("\ncodifica\n");
         RandomAccessFile file1 = new RandomAccessFile(destinazione, "rw");
         for (int p = 0; p < tot; p++) {
             byte c = file1.readByte();
@@ -357,9 +354,7 @@ public abstract class NewFile {
         cipherkey.init(Cipher.ENCRYPT_MODE, publickey);
         byte byteKey[] = secretKey.getEncoded();
         byte[] cypherkey = cipherkey.doFinal(byteKey);
-        System.out.println("lunghezza chiave des aes " + cypherkey.length + "\n" + cypherkey[0]);
 
-        System.out.println(" ");
 
 
         return cypherkey;

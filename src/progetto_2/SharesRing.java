@@ -19,6 +19,7 @@ public class SharesRing implements Serializable {
     private static final long serialVersionUID = 4L;
 
     protected SharesRing() {
+        System.out.println("Generazione primo per le chiav... Attendere.");
         this.p = SecretSharing.generatePrime(Const.BITLENGHT);
         mapFiles.put("RSAPublic",new HashMap<>());
         mapFiles.put("DSAPublic",new HashMap<>());
